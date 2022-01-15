@@ -15,7 +15,7 @@ Usage:
 `
 		fmt.Fprintf(flag.CommandLine.Output(), usageString)
 	}
-	
+
 	flag.Parse()
 
 	if flag.NArg() == 0 {
