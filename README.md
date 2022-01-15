@@ -1,2 +1,2 @@
-# kubectl-sql
-A true SQL enhancement for kubectl
+# kubectl-sql-query
+A true SQL-query enhancement for kubectl
