@@ -12,6 +12,9 @@ func main() {
 
 Usage:
   kubectl sql query <query-string>
+
+Flags:
+  -h, --help      help for kubectl-sql-query
 `
 		fmt.Fprintf(flag.CommandLine.Output(), usageString)
 	}

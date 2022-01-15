@@ -12,6 +12,9 @@ const expectedUsageString = `kubectl-sql-query is the kubectl plugin to query th
 
 Usage:
   kubectl sql query <query-string>
+
+Flags:
+  -h, --help      help for kubectl-sql-query
 `
 
 func TestCommand(t *testing.T) {
