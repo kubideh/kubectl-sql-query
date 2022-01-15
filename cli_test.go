@@ -9,18 +9,18 @@ import (
 )
 
 func TestCommand(t *testing.T) {
-	out, err := exec.Command("./kubectl-sql-query").CombinedOutput()
+	for _, c := range []string{
+		"kubectl-sql-query",
+		"kubectl-sql-query -h",
+		"kubectl sql query",
+		"kubectl sql query -h",
+	} {
+		t.Run(c, func(t *testing.T) {
+			cli := strings.Split(c, " ")
+			out, err := exec.Command(cli[0], cli[1:]...).CombinedOutput()
 
-	t.Log(string(out))
-
-	assert.NoError(t, err, "Failed to run kubectl-sql-query")
-}
-
-func TestPlugin(t *testing.T) {
-	cli := strings.Split("kubectl sql query", " ")
-	out, err := exec.Command(cli[0], cli[1:]...).CombinedOutput()
-
-	t.Log(string(out))
-
-	assert.NoError(t, err, "Failed to run kubectl-sql-query")
+			assert.NoErrorf(t, err, "Failed to run %s", c)
+			assert.Contains(t, string(out), "Usage")
+		})
+	}
 }
