@@ -25,5 +25,10 @@ jobs:
     - name: Test
       run: go test -v ./...
 
+    - name: Check formatting
+      run: |
+        exec 5>&1
+        test -z $(gofmt -l -e . | tee >(cat - >&5))
+
     - name: Vet
       run: go vet ./...
