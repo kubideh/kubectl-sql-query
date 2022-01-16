@@ -26,7 +26,5 @@ Flags:
 		os.Exit(0)
 	}
 
-	fmt.Println(flag.Args())
-
-	fmt.Println("Hello")
+	fmt.Println("No resources found in default namespace.")
 }

@@ -35,3 +35,27 @@ func TestCommand(t *testing.T) {
 		})
 	}
 }
+
+func TestCommandWithQueryString(t *testing.T) {
+	for _, c := range [][]string{
+		{
+			"kubectl-sql-query",
+			`SELECT * FROM pods WHERE namespace=default`,
+		},
+		{
+			"kubectl",
+			"sql",
+			"query",
+			`SELECT * FROM pods WHERE namespace=default`,
+		},
+	} {
+		t.Run(strings.Join(c, " "), func(t *testing.T) {
+			out, err := exec.Command(c[0], c[1:]...).CombinedOutput()
+
+			const expectedOut = "No resources found in default namespace.\n"
+
+			assert.NoErrorf(t, err, "Failed to run %s", c)
+			assert.Equal(t, expectedOut, string(out), "Unexpected output")
+		})
+	}
+}
