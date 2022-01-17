@@ -16,3 +16,6 @@
 
 # JetBrains IDE folder
 .idea/
+
+# Krew folder
+.krew/
