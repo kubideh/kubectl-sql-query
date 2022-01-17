@@ -52,16 +52,20 @@ func main() {
 		ErrOut: os.Stderr,
 	}
 
-	query(streams, clientSet, flag.Arg(0))
+	namespace, _, err := kubeConfig.Namespace()
+	if err != nil {
+		panic(err.Error())
+	}
+
+	query(streams, clientSet, namespace, flag.Arg(0))
 }
 
-func query(streams genericclioptions.IOStreams, clientSet kubernetes.Interface, sqlQuery string) {
+func query(streams genericclioptions.IOStreams, clientSet kubernetes.Interface, namespace, sqlQuery string) {
 	printer := printers.NewTablePrinter(printers.PrintOptions{})
 
-	namespace := ""
 	if strings.Contains(sqlQuery, "namespace=default") {
 		namespace = "default"
-	} else {
+	} else if strings.Contains(sqlQuery, "namespace=kube-system") {
 		namespace = "kube-system"
 	}
 
