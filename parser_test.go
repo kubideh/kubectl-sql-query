@@ -26,7 +26,7 @@ func TestParser(t *testing.T) {
 			expectedListener:   ListenerImpl{},
 		},
 		{
-			// Selection by namespace
+			// Selection by namespace TODO(evan) ensure valid K8s namespace format
 			query:              "SELECT * FROM pods WHERE namespace=default",
 			expectedErrorCount: 0,
 			expectedListener: ListenerImpl{
@@ -56,6 +56,21 @@ func TestParser(t *testing.T) {
 				},
 			},
 		},
+
+		// TODO(evan) Allow other fields in selection
+
+		// TODO(evan) Allow fields in projection
+
+		// TODO(evan) Allow different object kinds in selection
+
+		// TODO(evan) Allow (INNER) JOIN
+
+		// TODO(evan) Allow LEFT (OUTER) JOIN
+
+		// TODO(evan) Allow RIGHT (OUTER) JOIN
+
+		// TODO(evan) Allow FULL (OUTER) JOIN
+
 	}
 
 	for _, c := range cases {
