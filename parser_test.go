@@ -7,77 +7,67 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestParserWithEmptyQuery(t *testing.T) {
-	const query = ""
-
-	var errorListener ErrorListenerImpl
-	var listener ListenerImpl
-	p := CreateParser(&errorListener, query)
-
-	antlr.ParseTreeWalkerDefault.Walk(&listener, p.Query())
-
-	assert.Equal(t, 1, errorListener.Count, "Empty query should be an error")
-	assert.Equal(t, ListenerImpl{}, listener)
-}
-
-func TestParserWithoutWhereClause(t *testing.T) {
-	const query = "SELECT * FROM pods"
-
-	var errorListener ErrorListenerImpl
-	var listener ListenerImpl
-	p := CreateParser(&errorListener, query)
-
-	antlr.ParseTreeWalkerDefault.Walk(&listener, p.Query())
-
-	assert.Equal(t, 0, errorListener.Count, "Found errors in input")
-	assert.Equal(t, ListenerImpl{}, listener)
-}
-
-func TestParserWithNamespace(t *testing.T) {
-	const query = "SELECT * FROM pods WHERE namespace=default"
-
-	var errorListener ErrorListenerImpl
-	var listener ListenerImpl
-	p := CreateParser(&errorListener, query)
-
-	antlr.ParseTreeWalkerDefault.Walk(&listener, p.Query())
-
-	assert.Equal(t, 0, errorListener.Count, "Found errors in input")
-	expected := map[string]string{
-		"namespace": "default",
+func TestParser(t *testing.T) {
+	cases := []struct {
+		query              string
+		expectedErrorCount int
+		expectedListener   ListenerImpl
+	}{
+		{
+			// Empty queries are not allowed
+			query:              "",
+			expectedErrorCount: 1,
+			expectedListener:   ListenerImpl{},
+		},
+		{
+			// Selection is optional
+			query:              "SELECT * FROM pods",
+			expectedErrorCount: 0,
+			expectedListener:   ListenerImpl{},
+		},
+		{
+			// Selection by namespace
+			query:              "SELECT * FROM pods WHERE namespace=default",
+			expectedErrorCount: 0,
+			expectedListener: ListenerImpl{
+				Fields: map[string]string{
+					"namespace": "default",
+				},
+			},
+		},
+		{
+			// Selection by valid K8s object name
+			query:              "SELECT * FROM pods WHERE name=blargle1-flargle2.example.com",
+			expectedErrorCount: 0,
+			expectedListener: ListenerImpl{
+				Fields: map[string]string{
+					"name": "blargle1-flargle2.example.com",
+				},
+			},
+		},
+		{
+			// Selection by valid K8s object name and namespace
+			query:              "SELECT * FROM pods WHERE name=blargle AND namespace=flargle",
+			expectedErrorCount: 0,
+			expectedListener: ListenerImpl{
+				Fields: map[string]string{
+					"name":      "blargle",
+					"namespace": "flargle",
+				},
+			},
+		},
 	}
-	assert.Equal(t, expected, listener.Fields)
-}
 
-func TestParserWithName(t *testing.T) {
-	const query = "SELECT * FROM pods WHERE name=blargle1-flargle2.example.com"
+	for _, c := range cases {
+		t.Run(c.query, func(t *testing.T) {
+			var errorListener ErrorListenerImpl
+			var listener ListenerImpl
+			p := CreateParser(&errorListener, c.query)
 
-	var errorListener ErrorListenerImpl
-	var listener ListenerImpl
-	p := CreateParser(&errorListener, query)
+			antlr.ParseTreeWalkerDefault.Walk(&listener, p.Query())
 
-	antlr.ParseTreeWalkerDefault.Walk(&listener, p.Query())
-
-	assert.Equal(t, 0, errorListener.Count, "Found errors in input")
-	expected := map[string]string{
-		"name": "blargle1-flargle2.example.com",
+			assert.Equal(t, c.expectedErrorCount, errorListener.Count)
+			assert.Equal(t, c.expectedListener.Fields, listener.Fields)
+		})
 	}
-	assert.Equal(t, expected, listener.Fields)
-}
-
-func TestParserWithNameAndNamespace(t *testing.T) {
-	const query = "SELECT * FROM pods WHERE name=blargle AND namespace=flargle"
-
-	var errorListener ErrorListenerImpl
-	var listener ListenerImpl
-	p := CreateParser(&errorListener, query)
-
-	antlr.ParseTreeWalkerDefault.Walk(&listener, p.Query())
-
-	assert.Equal(t, 0, errorListener.Count, "Found errors in input")
-	expected := map[string]string{
-		"name":      "blargle",
-		"namespace": "flargle",
-	}
-	assert.Equal(t, expected, listener.Fields)
 }
