@@ -15,8 +15,48 @@ import (
 // no pods in a namespace
 // multiple pods in a namespace
 
-func TestQueryOnePodWithResult(t *testing.T) {
-	fakeClientSet := fake.NewSimpleClientset()
+func TestQueryFunction(t *testing.T) {
+	cases := []struct {
+		defaultNamespace string
+		sqlQuery         string
+		expectedOutput   string
+		expectedError    string
+	}{
+		{
+			defaultNamespace: "",
+			sqlQuery:         "SELECT * FROM pods WHERE name=kube-apiserver-kind-control-plane AND namespace=kube-system",
+			expectedOutput:   "NAME                                AGE\nkube-apiserver-kind-control-plane   <unknown>\n",
+			expectedError:    "",
+		},
+		{
+			defaultNamespace: "",
+			sqlQuery:         "SELECT * FROM pods WHERE namespace=default",
+			expectedOutput:   "",
+			expectedError:    "No resources found in default namespace.\n",
+		},
+		{
+			defaultNamespace: "default",
+			sqlQuery:         "SELECT * FROM pods",
+			expectedOutput:   "",
+			expectedError:    "No resources found in default namespace.\n",
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.defaultNamespace+":"+c.sqlQuery, func(t *testing.T) {
+			fakeClientSet := fake.NewSimpleClientset()
+			setupQueryTest(t, fakeClientSet)
+			streams, _, outBuf, errBuf := genericclioptions.NewTestIOStreams()
+
+			query(streams, fakeClientSet, c.defaultNamespace, c.sqlQuery)
+
+			assert.Equal(t, c.expectedOutput, outBuf.String())
+			assert.Equal(t, c.expectedError, errBuf.String())
+		})
+	}
+}
+
+func setupQueryTest(t *testing.T, fakeClientSet *fake.Clientset) {
 	fakeClientSet.CoreV1().Pods("kube-system").Create(
 		context.TODO(),
 		&v1.Pod{
@@ -27,34 +67,4 @@ func TestQueryOnePodWithResult(t *testing.T) {
 		},
 		metav1.CreateOptions{},
 	)
-
-	streams, _, outBuf, errBuf := genericclioptions.NewTestIOStreams()
-
-	query(streams, fakeClientSet, "", "SELECT * FROM pods WHERE name=kube-apiserver-kind-control-plane AND namespace=kube-system")
-
-	const expectedOutput = "NAME                                AGE\nkube-apiserver-kind-control-plane   <unknown>\n"
-	assert.Equal(t, expectedOutput, outBuf.String())
-	assert.Equal(t, "", errBuf.String())
-}
-
-func TestQueryAllPodsInDefaultNamespaceWithNoResults(t *testing.T) {
-	fakeClientSet := fake.NewSimpleClientset()
-
-	streams, _, outBuf, errBuf := genericclioptions.NewTestIOStreams()
-
-	query(streams, fakeClientSet, "", "SELECT * FROM pods WHERE namespace=default")
-
-	assert.Equal(t, "", outBuf.String())
-	assert.Equal(t, "No resources found in default namespace.\n", errBuf.String())
-}
-
-func TestQueryAllPodsInDefaultNamespaceWithNoResults2(t *testing.T) {
-	fakeClientSet := fake.NewSimpleClientset()
-
-	streams, _, outBuf, errBuf := genericclioptions.NewTestIOStreams()
-
-	query(streams, fakeClientSet, "default", "SELECT * FROM pods")
-
-	assert.Equal(t, "", outBuf.String())
-	assert.Equal(t, "No resources found in default namespace.\n", errBuf.String())
 }

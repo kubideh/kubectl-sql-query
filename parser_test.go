@@ -30,9 +30,7 @@ func TestParser(t *testing.T) {
 			query:              "SELECT * FROM pods WHERE namespace=default",
 			expectedErrorCount: 0,
 			expectedListener: ListenerImpl{
-				Fields: map[string]string{
-					"namespace": "default",
-				},
+				Namespace: "default",
 			},
 		},
 		{
@@ -40,9 +38,7 @@ func TestParser(t *testing.T) {
 			query:              "SELECT * FROM pods WHERE name=blargle1-flargle2.example.com",
 			expectedErrorCount: 0,
 			expectedListener: ListenerImpl{
-				Fields: map[string]string{
-					"name": "blargle1-flargle2.example.com",
-				},
+				Name: "blargle1-flargle2.example.com",
 			},
 		},
 		{
@@ -50,14 +46,23 @@ func TestParser(t *testing.T) {
 			query:              "SELECT * FROM pods WHERE name=blargle AND namespace=flargle",
 			expectedErrorCount: 0,
 			expectedListener: ListenerImpl{
-				Fields: map[string]string{
-					"name":      "blargle",
-					"namespace": "flargle",
+				Name:      "blargle",
+				Namespace: "flargle",
+			},
+		},
+		{
+			// Selection by arbitrary fields
+			query:              "SELECT * FROM pods WHERE name=fake-name AND namespace=fake-namespace AND foo=bar AND blargle=flargle",
+			expectedErrorCount: 0,
+			expectedListener: ListenerImpl{
+				Name:      "fake-name",
+				Namespace: "fake-namespace",
+				SelectionFields: map[string]string{
+					"foo":     "bar",
+					"blargle": "flargle",
 				},
 			},
 		},
-
-		// TODO(evan) Allow other fields in selection
 
 		// TODO(evan) Allow fields in projection
 
@@ -82,7 +87,7 @@ func TestParser(t *testing.T) {
 			antlr.ParseTreeWalkerDefault.Walk(&listener, p.Query())
 
 			assert.Equal(t, c.expectedErrorCount, errorListener.Count)
-			assert.Equal(t, c.expectedListener.Fields, listener.Fields)
+			assert.Equal(t, c.expectedListener.SelectionFields, listener.SelectionFields)
 		})
 	}
 }

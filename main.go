@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -75,15 +74,15 @@ func query(streams genericclioptions.IOStreams, clientSet kubernetes.Interface, 
 	}
 
 	namespace := defaultNamespace
-	if listener.Fields["namespace"] != "" {
-		namespace = listener.Fields["namespace"]
+	if listener.Namespace != "" {
+		namespace = listener.Namespace
 	}
 
-	name := listener.Fields["name"]
+	name := listener.Name
 
 	printer := printers.NewTablePrinter(printers.PrintOptions{})
 
-	if strings.Contains(sqlQuery, "name=") {
+	if name != "" {
 		pod, err := clientSet.CoreV1().Pods(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 		if err != nil {
 			panic(err.Error())
