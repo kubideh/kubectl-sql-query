@@ -34,16 +34,32 @@ var _ antlr.ErrorListener = &ErrorListenerImpl{}
 // a query against the Kubernetes API.
 type ListenerImpl struct {
 	parser.BaseSQLQueryListener
-	field           string
-	value           string
-	SelectionFields map[string]string
-	Namespace       string
-	Name            string
+	field            string
+	value            string
+	Kind             string
+	Namespace        string
+	Name             string
+	ProjectionFields []string
+	SelectionFields  map[string]string
 }
 
 // ExitField is called when production field is exited.
 func (l *ListenerImpl) ExitField(ctx *parser.FieldContext) {
+	if ctx.GetText() == "*" {
+		return
+	}
+
+	l.ProjectionFields = append(l.ProjectionFields, ctx.GetText())
+}
+
+// ExitKey is called when production key is exited.
+func (l *ListenerImpl) ExitKey(ctx *parser.KeyContext) {
 	l.field = ctx.GetText()
+}
+
+// ExitTableName is called when production tableName is exited.
+func (l *ListenerImpl) ExitTableName(ctx *parser.TableNameContext) {
+	l.Kind = ctx.GetText()
 }
 
 // ExitValue is called when production value is exited.

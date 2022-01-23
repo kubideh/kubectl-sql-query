@@ -4,7 +4,11 @@ grammar SQLQuery;
 // Rules
 query: statement EOF ;
 
-statement: SELECT '*' FROM tableName (whereClause)? ;
+statement: SELECT fieldList FROM tableName (whereClause)? ;
+
+fieldList: field (',' field)* ;
+
+field: ALL | IDENTIFIER ;
 
 tableName: IDENTIFIER ;
 
@@ -12,13 +16,14 @@ whereClause: WHERE expr ;
 
 expr: evaluation | expr AND expr ;
 
-evaluation: field EQ value ;
+evaluation: key EQ value ;
 
-field: IDENTIFIER ;
+key: IDENTIFIER ;
 
 value: IDENTIFIER ;
 
 // Tokens
+ALL: '*' ;
 EQ: '=' ;
 FROM: 'FROM' ;
 SELECT : 'SELECT' ;

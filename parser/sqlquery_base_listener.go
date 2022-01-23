@@ -33,6 +33,18 @@ func (s *BaseSQLQueryListener) EnterStatement(ctx *StatementContext) {}
 // ExitStatement is called when production statement is exited.
 func (s *BaseSQLQueryListener) ExitStatement(ctx *StatementContext) {}
 
+// EnterFieldList is called when production fieldList is entered.
+func (s *BaseSQLQueryListener) EnterFieldList(ctx *FieldListContext) {}
+
+// ExitFieldList is called when production fieldList is exited.
+func (s *BaseSQLQueryListener) ExitFieldList(ctx *FieldListContext) {}
+
+// EnterField is called when production field is entered.
+func (s *BaseSQLQueryListener) EnterField(ctx *FieldContext) {}
+
+// ExitField is called when production field is exited.
+func (s *BaseSQLQueryListener) ExitField(ctx *FieldContext) {}
+
 // EnterTableName is called when production tableName is entered.
 func (s *BaseSQLQueryListener) EnterTableName(ctx *TableNameContext) {}
 
@@ -57,11 +69,11 @@ func (s *BaseSQLQueryListener) EnterEvaluation(ctx *EvaluationContext) {}
 // ExitEvaluation is called when production evaluation is exited.
 func (s *BaseSQLQueryListener) ExitEvaluation(ctx *EvaluationContext) {}
 
-// EnterField is called when production field is entered.
-func (s *BaseSQLQueryListener) EnterField(ctx *FieldContext) {}
+// EnterKey is called when production key is entered.
+func (s *BaseSQLQueryListener) EnterKey(ctx *KeyContext) {}
 
-// ExitField is called when production field is exited.
-func (s *BaseSQLQueryListener) ExitField(ctx *FieldContext) {}
+// ExitKey is called when production key is exited.
+func (s *BaseSQLQueryListener) ExitKey(ctx *KeyContext) {}
 
 // EnterValue is called when production value is entered.
 func (s *BaseSQLQueryListener) EnterValue(ctx *ValueContext) {}

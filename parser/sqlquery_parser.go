@@ -16,36 +16,42 @@ var _ = reflect.Copy
 var _ = strconv.Itoa
 
 var parserATN = []uint16{
-	3, 24715, 42794, 33075, 47597, 16764, 15335, 30598, 22884, 3, 10, 53, 4,
+	3, 24715, 42794, 33075, 47597, 16764, 15335, 30598, 22884, 3, 11, 67, 4,
 	2, 9, 2, 4, 3, 9, 3, 4, 4, 9, 4, 4, 5, 9, 5, 4, 6, 9, 6, 4, 7, 9, 7, 4,
-	8, 9, 8, 4, 9, 9, 9, 3, 2, 3, 2, 3, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 5,
-	3, 27, 10, 3, 3, 4, 3, 4, 3, 5, 3, 5, 3, 5, 3, 6, 3, 6, 3, 6, 3, 6, 3,
-	6, 3, 6, 7, 6, 40, 10, 6, 12, 6, 14, 6, 43, 11, 6, 3, 7, 3, 7, 3, 7, 3,
-	7, 3, 8, 3, 8, 3, 9, 3, 9, 3, 9, 2, 3, 10, 10, 2, 4, 6, 8, 10, 12, 14,
-	16, 2, 2, 2, 46, 2, 18, 3, 2, 2, 2, 4, 21, 3, 2, 2, 2, 6, 28, 3, 2, 2,
-	2, 8, 30, 3, 2, 2, 2, 10, 33, 3, 2, 2, 2, 12, 44, 3, 2, 2, 2, 14, 48, 3,
-	2, 2, 2, 16, 50, 3, 2, 2, 2, 18, 19, 5, 4, 3, 2, 19, 20, 7, 2, 2, 3, 20,
-	3, 3, 2, 2, 2, 21, 22, 7, 6, 2, 2, 22, 23, 7, 3, 2, 2, 23, 24, 7, 5, 2,
-	2, 24, 26, 5, 6, 4, 2, 25, 27, 5, 8, 5, 2, 26, 25, 3, 2, 2, 2, 26, 27,
-	3, 2, 2, 2, 27, 5, 3, 2, 2, 2, 28, 29, 7, 9, 2, 2, 29, 7, 3, 2, 2, 2, 30,
-	31, 7, 7, 2, 2, 31, 32, 5, 10, 6, 2, 32, 9, 3, 2, 2, 2, 33, 34, 8, 6, 1,
-	2, 34, 35, 5, 12, 7, 2, 35, 41, 3, 2, 2, 2, 36, 37, 12, 3, 2, 2, 37, 38,
-	7, 8, 2, 2, 38, 40, 5, 10, 6, 4, 39, 36, 3, 2, 2, 2, 40, 43, 3, 2, 2, 2,
-	41, 39, 3, 2, 2, 2, 41, 42, 3, 2, 2, 2, 42, 11, 3, 2, 2, 2, 43, 41, 3,
-	2, 2, 2, 44, 45, 5, 14, 8, 2, 45, 46, 7, 4, 2, 2, 46, 47, 5, 16, 9, 2,
-	47, 13, 3, 2, 2, 2, 48, 49, 7, 9, 2, 2, 49, 15, 3, 2, 2, 2, 50, 51, 7,
-	9, 2, 2, 51, 17, 3, 2, 2, 2, 4, 26, 41,
+	8, 9, 8, 4, 9, 9, 9, 4, 10, 9, 10, 4, 11, 9, 11, 3, 2, 3, 2, 3, 2, 3, 3,
+	3, 3, 3, 3, 3, 3, 3, 3, 5, 3, 31, 10, 3, 3, 4, 3, 4, 3, 4, 7, 4, 36, 10,
+	4, 12, 4, 14, 4, 39, 11, 4, 3, 5, 3, 5, 3, 6, 3, 6, 3, 7, 3, 7, 3, 7, 3,
+	8, 3, 8, 3, 8, 3, 8, 3, 8, 3, 8, 7, 8, 54, 10, 8, 12, 8, 14, 8, 57, 11,
+	8, 3, 9, 3, 9, 3, 9, 3, 9, 3, 10, 3, 10, 3, 11, 3, 11, 3, 11, 2, 3, 14,
+	12, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 2, 3, 4, 2, 4, 4, 10, 10, 2, 59,
+	2, 22, 3, 2, 2, 2, 4, 25, 3, 2, 2, 2, 6, 32, 3, 2, 2, 2, 8, 40, 3, 2, 2,
+	2, 10, 42, 3, 2, 2, 2, 12, 44, 3, 2, 2, 2, 14, 47, 3, 2, 2, 2, 16, 58,
+	3, 2, 2, 2, 18, 62, 3, 2, 2, 2, 20, 64, 3, 2, 2, 2, 22, 23, 5, 4, 3, 2,
+	23, 24, 7, 2, 2, 3, 24, 3, 3, 2, 2, 2, 25, 26, 7, 7, 2, 2, 26, 27, 5, 6,
+	4, 2, 27, 28, 7, 6, 2, 2, 28, 30, 5, 10, 6, 2, 29, 31, 5, 12, 7, 2, 30,
+	29, 3, 2, 2, 2, 30, 31, 3, 2, 2, 2, 31, 5, 3, 2, 2, 2, 32, 37, 5, 8, 5,
+	2, 33, 34, 7, 3, 2, 2, 34, 36, 5, 8, 5, 2, 35, 33, 3, 2, 2, 2, 36, 39,
+	3, 2, 2, 2, 37, 35, 3, 2, 2, 2, 37, 38, 3, 2, 2, 2, 38, 7, 3, 2, 2, 2,
+	39, 37, 3, 2, 2, 2, 40, 41, 9, 2, 2, 2, 41, 9, 3, 2, 2, 2, 42, 43, 7, 10,
+	2, 2, 43, 11, 3, 2, 2, 2, 44, 45, 7, 8, 2, 2, 45, 46, 5, 14, 8, 2, 46,
+	13, 3, 2, 2, 2, 47, 48, 8, 8, 1, 2, 48, 49, 5, 16, 9, 2, 49, 55, 3, 2,
+	2, 2, 50, 51, 12, 3, 2, 2, 51, 52, 7, 9, 2, 2, 52, 54, 5, 14, 8, 4, 53,
+	50, 3, 2, 2, 2, 54, 57, 3, 2, 2, 2, 55, 53, 3, 2, 2, 2, 55, 56, 3, 2, 2,
+	2, 56, 15, 3, 2, 2, 2, 57, 55, 3, 2, 2, 2, 58, 59, 5, 18, 10, 2, 59, 60,
+	7, 5, 2, 2, 60, 61, 5, 20, 11, 2, 61, 17, 3, 2, 2, 2, 62, 63, 7, 10, 2,
+	2, 63, 19, 3, 2, 2, 2, 64, 65, 7, 10, 2, 2, 65, 21, 3, 2, 2, 2, 5, 30,
+	37, 55,
 }
 var literalNames = []string{
-	"", "'*'", "'='", "'FROM'", "'SELECT'", "'WHERE'", "'AND'",
+	"", "','", "'*'", "'='", "'FROM'", "'SELECT'", "'WHERE'", "'AND'",
 }
 var symbolicNames = []string{
-	"", "", "EQ", "FROM", "SELECT", "WHERE", "AND", "IDENTIFIER", "WHITESPACE",
+	"", "", "ALL", "EQ", "FROM", "SELECT", "WHERE", "AND", "IDENTIFIER", "WHITESPACE",
 }
 
 var ruleNames = []string{
-	"query", "statement", "tableName", "whereClause", "expr", "evaluation",
-	"field", "value",
+	"query", "statement", "fieldList", "field", "tableName", "whereClause",
+	"expr", "evaluation", "key", "value",
 }
 
 type SQLQueryParser struct {
@@ -81,25 +87,28 @@ func NewSQLQueryParser(input antlr.TokenStream) *SQLQueryParser {
 const (
 	SQLQueryParserEOF        = antlr.TokenEOF
 	SQLQueryParserT__0       = 1
-	SQLQueryParserEQ         = 2
-	SQLQueryParserFROM       = 3
-	SQLQueryParserSELECT     = 4
-	SQLQueryParserWHERE      = 5
-	SQLQueryParserAND        = 6
-	SQLQueryParserIDENTIFIER = 7
-	SQLQueryParserWHITESPACE = 8
+	SQLQueryParserALL        = 2
+	SQLQueryParserEQ         = 3
+	SQLQueryParserFROM       = 4
+	SQLQueryParserSELECT     = 5
+	SQLQueryParserWHERE      = 6
+	SQLQueryParserAND        = 7
+	SQLQueryParserIDENTIFIER = 8
+	SQLQueryParserWHITESPACE = 9
 )
 
 // SQLQueryParser rules.
 const (
 	SQLQueryParserRULE_query       = 0
 	SQLQueryParserRULE_statement   = 1
-	SQLQueryParserRULE_tableName   = 2
-	SQLQueryParserRULE_whereClause = 3
-	SQLQueryParserRULE_expr        = 4
-	SQLQueryParserRULE_evaluation  = 5
-	SQLQueryParserRULE_field       = 6
-	SQLQueryParserRULE_value       = 7
+	SQLQueryParserRULE_fieldList   = 2
+	SQLQueryParserRULE_field       = 3
+	SQLQueryParserRULE_tableName   = 4
+	SQLQueryParserRULE_whereClause = 5
+	SQLQueryParserRULE_expr        = 6
+	SQLQueryParserRULE_evaluation  = 7
+	SQLQueryParserRULE_key         = 8
+	SQLQueryParserRULE_value       = 9
 )
 
 // IQueryContext is an interface to support dynamic dispatch.
@@ -199,11 +208,11 @@ func (p *SQLQueryParser) Query() (localctx IQueryContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(16)
+		p.SetState(20)
 		p.Statement()
 	}
 	{
-		p.SetState(17)
+		p.SetState(21)
 		p.Match(SQLQueryParserEOF)
 	}
 
@@ -250,6 +259,16 @@ func (s *StatementContext) GetParser() antlr.Parser { return s.parser }
 
 func (s *StatementContext) SELECT() antlr.TerminalNode {
 	return s.GetToken(SQLQueryParserSELECT, 0)
+}
+
+func (s *StatementContext) FieldList() IFieldListContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*IFieldListContext)(nil)).Elem(), 0)
+
+	if t == nil {
+		return nil
+	}
+
+	return t.(IFieldListContext)
 }
 
 func (s *StatementContext) FROM() antlr.TerminalNode {
@@ -322,31 +341,269 @@ func (p *SQLQueryParser) Statement() (localctx IStatementContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(19)
+		p.SetState(23)
 		p.Match(SQLQueryParserSELECT)
 	}
 	{
-		p.SetState(20)
-		p.Match(SQLQueryParserT__0)
+		p.SetState(24)
+		p.FieldList()
 	}
 	{
-		p.SetState(21)
+		p.SetState(25)
 		p.Match(SQLQueryParserFROM)
 	}
 	{
-		p.SetState(22)
+		p.SetState(26)
 		p.TableName()
 	}
-	p.SetState(24)
+	p.SetState(28)
 	p.GetErrorHandler().Sync(p)
 	_la = p.GetTokenStream().LA(1)
 
 	if _la == SQLQueryParserWHERE {
 		{
-			p.SetState(23)
+			p.SetState(27)
 			p.WhereClause()
 		}
 
+	}
+
+	return localctx
+}
+
+// IFieldListContext is an interface to support dynamic dispatch.
+type IFieldListContext interface {
+	antlr.ParserRuleContext
+
+	// GetParser returns the parser.
+	GetParser() antlr.Parser
+
+	// IsFieldListContext differentiates from other interfaces.
+	IsFieldListContext()
+}
+
+type FieldListContext struct {
+	*antlr.BaseParserRuleContext
+	parser antlr.Parser
+}
+
+func NewEmptyFieldListContext() *FieldListContext {
+	var p = new(FieldListContext)
+	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(nil, -1)
+	p.RuleIndex = SQLQueryParserRULE_fieldList
+	return p
+}
+
+func (*FieldListContext) IsFieldListContext() {}
+
+func NewFieldListContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *FieldListContext {
+	var p = new(FieldListContext)
+
+	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(parent, invokingState)
+
+	p.parser = parser
+	p.RuleIndex = SQLQueryParserRULE_fieldList
+
+	return p
+}
+
+func (s *FieldListContext) GetParser() antlr.Parser { return s.parser }
+
+func (s *FieldListContext) AllField() []IFieldContext {
+	var ts = s.GetTypedRuleContexts(reflect.TypeOf((*IFieldContext)(nil)).Elem())
+	var tst = make([]IFieldContext, len(ts))
+
+	for i, t := range ts {
+		if t != nil {
+			tst[i] = t.(IFieldContext)
+		}
+	}
+
+	return tst
+}
+
+func (s *FieldListContext) Field(i int) IFieldContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*IFieldContext)(nil)).Elem(), i)
+
+	if t == nil {
+		return nil
+	}
+
+	return t.(IFieldContext)
+}
+
+func (s *FieldListContext) GetRuleContext() antlr.RuleContext {
+	return s
+}
+
+func (s *FieldListContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+	return antlr.TreesStringTree(s, ruleNames, recog)
+}
+
+func (s *FieldListContext) EnterRule(listener antlr.ParseTreeListener) {
+	if listenerT, ok := listener.(SQLQueryListener); ok {
+		listenerT.EnterFieldList(s)
+	}
+}
+
+func (s *FieldListContext) ExitRule(listener antlr.ParseTreeListener) {
+	if listenerT, ok := listener.(SQLQueryListener); ok {
+		listenerT.ExitFieldList(s)
+	}
+}
+
+func (p *SQLQueryParser) FieldList() (localctx IFieldListContext) {
+	this := p
+	_ = this
+
+	localctx = NewFieldListContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 4, SQLQueryParserRULE_fieldList)
+	var _la int
+
+	defer func() {
+		p.ExitRule()
+	}()
+
+	defer func() {
+		if err := recover(); err != nil {
+			if v, ok := err.(antlr.RecognitionException); ok {
+				localctx.SetException(v)
+				p.GetErrorHandler().ReportError(p, v)
+				p.GetErrorHandler().Recover(p, v)
+			} else {
+				panic(err)
+			}
+		}
+	}()
+
+	p.EnterOuterAlt(localctx, 1)
+	{
+		p.SetState(30)
+		p.Field()
+	}
+	p.SetState(35)
+	p.GetErrorHandler().Sync(p)
+	_la = p.GetTokenStream().LA(1)
+
+	for _la == SQLQueryParserT__0 {
+		{
+			p.SetState(31)
+			p.Match(SQLQueryParserT__0)
+		}
+		{
+			p.SetState(32)
+			p.Field()
+		}
+
+		p.SetState(37)
+		p.GetErrorHandler().Sync(p)
+		_la = p.GetTokenStream().LA(1)
+	}
+
+	return localctx
+}
+
+// IFieldContext is an interface to support dynamic dispatch.
+type IFieldContext interface {
+	antlr.ParserRuleContext
+
+	// GetParser returns the parser.
+	GetParser() antlr.Parser
+
+	// IsFieldContext differentiates from other interfaces.
+	IsFieldContext()
+}
+
+type FieldContext struct {
+	*antlr.BaseParserRuleContext
+	parser antlr.Parser
+}
+
+func NewEmptyFieldContext() *FieldContext {
+	var p = new(FieldContext)
+	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(nil, -1)
+	p.RuleIndex = SQLQueryParserRULE_field
+	return p
+}
+
+func (*FieldContext) IsFieldContext() {}
+
+func NewFieldContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *FieldContext {
+	var p = new(FieldContext)
+
+	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(parent, invokingState)
+
+	p.parser = parser
+	p.RuleIndex = SQLQueryParserRULE_field
+
+	return p
+}
+
+func (s *FieldContext) GetParser() antlr.Parser { return s.parser }
+
+func (s *FieldContext) ALL() antlr.TerminalNode {
+	return s.GetToken(SQLQueryParserALL, 0)
+}
+
+func (s *FieldContext) IDENTIFIER() antlr.TerminalNode {
+	return s.GetToken(SQLQueryParserIDENTIFIER, 0)
+}
+
+func (s *FieldContext) GetRuleContext() antlr.RuleContext {
+	return s
+}
+
+func (s *FieldContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+	return antlr.TreesStringTree(s, ruleNames, recog)
+}
+
+func (s *FieldContext) EnterRule(listener antlr.ParseTreeListener) {
+	if listenerT, ok := listener.(SQLQueryListener); ok {
+		listenerT.EnterField(s)
+	}
+}
+
+func (s *FieldContext) ExitRule(listener antlr.ParseTreeListener) {
+	if listenerT, ok := listener.(SQLQueryListener); ok {
+		listenerT.ExitField(s)
+	}
+}
+
+func (p *SQLQueryParser) Field() (localctx IFieldContext) {
+	this := p
+	_ = this
+
+	localctx = NewFieldContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 6, SQLQueryParserRULE_field)
+	var _la int
+
+	defer func() {
+		p.ExitRule()
+	}()
+
+	defer func() {
+		if err := recover(); err != nil {
+			if v, ok := err.(antlr.RecognitionException); ok {
+				localctx.SetException(v)
+				p.GetErrorHandler().ReportError(p, v)
+				p.GetErrorHandler().Recover(p, v)
+			} else {
+				panic(err)
+			}
+		}
+	}()
+
+	p.EnterOuterAlt(localctx, 1)
+	{
+		p.SetState(38)
+		_la = p.GetTokenStream().LA(1)
+
+		if !(_la == SQLQueryParserALL || _la == SQLQueryParserIDENTIFIER) {
+			p.GetErrorHandler().RecoverInline(p)
+		} else {
+			p.GetErrorHandler().ReportMatch(p)
+			p.Consume()
+		}
 	}
 
 	return localctx
@@ -419,7 +676,7 @@ func (p *SQLQueryParser) TableName() (localctx ITableNameContext) {
 	_ = this
 
 	localctx = NewTableNameContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 4, SQLQueryParserRULE_tableName)
+	p.EnterRule(localctx, 8, SQLQueryParserRULE_tableName)
 
 	defer func() {
 		p.ExitRule()
@@ -439,7 +696,7 @@ func (p *SQLQueryParser) TableName() (localctx ITableNameContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(26)
+		p.SetState(40)
 		p.Match(SQLQueryParserIDENTIFIER)
 	}
 
@@ -523,7 +780,7 @@ func (p *SQLQueryParser) WhereClause() (localctx IWhereClauseContext) {
 	_ = this
 
 	localctx = NewWhereClauseContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 6, SQLQueryParserRULE_whereClause)
+	p.EnterRule(localctx, 10, SQLQueryParserRULE_whereClause)
 
 	defer func() {
 		p.ExitRule()
@@ -543,11 +800,11 @@ func (p *SQLQueryParser) WhereClause() (localctx IWhereClauseContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(28)
+		p.SetState(42)
 		p.Match(SQLQueryParserWHERE)
 	}
 	{
-		p.SetState(29)
+		p.SetState(43)
 		p.expr(0)
 	}
 
@@ -662,8 +919,8 @@ func (p *SQLQueryParser) expr(_p int) (localctx IExprContext) {
 	localctx = NewExprContext(p, p.GetParserRuleContext(), _parentState)
 	var _prevctx IExprContext = localctx
 	var _ antlr.ParserRuleContext = _prevctx // TODO: To prevent unused variable warning.
-	_startState := 8
-	p.EnterRecursionRule(localctx, 8, SQLQueryParserRULE_expr, _p)
+	_startState := 12
+	p.EnterRecursionRule(localctx, 12, SQLQueryParserRULE_expr, _p)
 
 	defer func() {
 		p.UnrollRecursionContexts(_parentctx)
@@ -685,14 +942,14 @@ func (p *SQLQueryParser) expr(_p int) (localctx IExprContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(32)
+		p.SetState(46)
 		p.Evaluation()
 	}
 
 	p.GetParserRuleContext().SetStop(p.GetTokenStream().LT(-1))
-	p.SetState(39)
+	p.SetState(53)
 	p.GetErrorHandler().Sync(p)
-	_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 1, p.GetParserRuleContext())
+	_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 2, p.GetParserRuleContext())
 
 	for _alt != 2 && _alt != antlr.ATNInvalidAltNumber {
 		if _alt == 1 {
@@ -702,24 +959,24 @@ func (p *SQLQueryParser) expr(_p int) (localctx IExprContext) {
 			_prevctx = localctx
 			localctx = NewExprContext(p, _parentctx, _parentState)
 			p.PushNewRecursionContext(localctx, _startState, SQLQueryParserRULE_expr)
-			p.SetState(34)
+			p.SetState(48)
 
 			if !(p.Precpred(p.GetParserRuleContext(), 1)) {
 				panic(antlr.NewFailedPredicateException(p, "p.Precpred(p.GetParserRuleContext(), 1)", ""))
 			}
 			{
-				p.SetState(35)
+				p.SetState(49)
 				p.Match(SQLQueryParserAND)
 			}
 			{
-				p.SetState(36)
+				p.SetState(50)
 				p.expr(2)
 			}
 
 		}
-		p.SetState(41)
+		p.SetState(55)
 		p.GetErrorHandler().Sync(p)
-		_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 1, p.GetParserRuleContext())
+		_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 2, p.GetParserRuleContext())
 	}
 
 	return localctx
@@ -763,14 +1020,14 @@ func NewEvaluationContext(parser antlr.Parser, parent antlr.ParserRuleContext, i
 
 func (s *EvaluationContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *EvaluationContext) Field() IFieldContext {
-	var t = s.GetTypedRuleContext(reflect.TypeOf((*IFieldContext)(nil)).Elem(), 0)
+func (s *EvaluationContext) Key() IKeyContext {
+	var t = s.GetTypedRuleContext(reflect.TypeOf((*IKeyContext)(nil)).Elem(), 0)
 
 	if t == nil {
 		return nil
 	}
 
-	return t.(IFieldContext)
+	return t.(IKeyContext)
 }
 
 func (s *EvaluationContext) EQ() antlr.TerminalNode {
@@ -812,7 +1069,7 @@ func (p *SQLQueryParser) Evaluation() (localctx IEvaluationContext) {
 	_ = this
 
 	localctx = NewEvaluationContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 10, SQLQueryParserRULE_evaluation)
+	p.EnterRule(localctx, 14, SQLQueryParserRULE_evaluation)
 
 	defer func() {
 		p.ExitRule()
@@ -832,89 +1089,89 @@ func (p *SQLQueryParser) Evaluation() (localctx IEvaluationContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(42)
-		p.Field()
+		p.SetState(56)
+		p.Key()
 	}
 	{
-		p.SetState(43)
+		p.SetState(57)
 		p.Match(SQLQueryParserEQ)
 	}
 	{
-		p.SetState(44)
+		p.SetState(58)
 		p.Value()
 	}
 
 	return localctx
 }
 
-// IFieldContext is an interface to support dynamic dispatch.
-type IFieldContext interface {
+// IKeyContext is an interface to support dynamic dispatch.
+type IKeyContext interface {
 	antlr.ParserRuleContext
 
 	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
-	// IsFieldContext differentiates from other interfaces.
-	IsFieldContext()
+	// IsKeyContext differentiates from other interfaces.
+	IsKeyContext()
 }
 
-type FieldContext struct {
+type KeyContext struct {
 	*antlr.BaseParserRuleContext
 	parser antlr.Parser
 }
 
-func NewEmptyFieldContext() *FieldContext {
-	var p = new(FieldContext)
+func NewEmptyKeyContext() *KeyContext {
+	var p = new(KeyContext)
 	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(nil, -1)
-	p.RuleIndex = SQLQueryParserRULE_field
+	p.RuleIndex = SQLQueryParserRULE_key
 	return p
 }
 
-func (*FieldContext) IsFieldContext() {}
+func (*KeyContext) IsKeyContext() {}
 
-func NewFieldContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *FieldContext {
-	var p = new(FieldContext)
+func NewKeyContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokingState int) *KeyContext {
+	var p = new(KeyContext)
 
 	p.BaseParserRuleContext = antlr.NewBaseParserRuleContext(parent, invokingState)
 
 	p.parser = parser
-	p.RuleIndex = SQLQueryParserRULE_field
+	p.RuleIndex = SQLQueryParserRULE_key
 
 	return p
 }
 
-func (s *FieldContext) GetParser() antlr.Parser { return s.parser }
+func (s *KeyContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *FieldContext) IDENTIFIER() antlr.TerminalNode {
+func (s *KeyContext) IDENTIFIER() antlr.TerminalNode {
 	return s.GetToken(SQLQueryParserIDENTIFIER, 0)
 }
 
-func (s *FieldContext) GetRuleContext() antlr.RuleContext {
+func (s *KeyContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
 
-func (s *FieldContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
+func (s *KeyContext) ToStringTree(ruleNames []string, recog antlr.Recognizer) string {
 	return antlr.TreesStringTree(s, ruleNames, recog)
 }
 
-func (s *FieldContext) EnterRule(listener antlr.ParseTreeListener) {
+func (s *KeyContext) EnterRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(SQLQueryListener); ok {
-		listenerT.EnterField(s)
+		listenerT.EnterKey(s)
 	}
 }
 
-func (s *FieldContext) ExitRule(listener antlr.ParseTreeListener) {
+func (s *KeyContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(SQLQueryListener); ok {
-		listenerT.ExitField(s)
+		listenerT.ExitKey(s)
 	}
 }
 
-func (p *SQLQueryParser) Field() (localctx IFieldContext) {
+func (p *SQLQueryParser) Key() (localctx IKeyContext) {
 	this := p
 	_ = this
 
-	localctx = NewFieldContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 12, SQLQueryParserRULE_field)
+	localctx = NewKeyContext(p, p.GetParserRuleContext(), p.GetState())
+	p.EnterRule(localctx, 16, SQLQueryParserRULE_key)
 
 	defer func() {
 		p.ExitRule()
@@ -934,7 +1191,7 @@ func (p *SQLQueryParser) Field() (localctx IFieldContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(46)
+		p.SetState(60)
 		p.Match(SQLQueryParserIDENTIFIER)
 	}
 
@@ -1008,7 +1265,7 @@ func (p *SQLQueryParser) Value() (localctx IValueContext) {
 	_ = this
 
 	localctx = NewValueContext(p, p.GetParserRuleContext(), p.GetState())
-	p.EnterRule(localctx, 14, SQLQueryParserRULE_value)
+	p.EnterRule(localctx, 18, SQLQueryParserRULE_value)
 
 	defer func() {
 		p.ExitRule()
@@ -1028,7 +1285,7 @@ func (p *SQLQueryParser) Value() (localctx IValueContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(48)
+		p.SetState(62)
 		p.Match(SQLQueryParserIDENTIFIER)
 	}
 
@@ -1037,7 +1294,7 @@ func (p *SQLQueryParser) Value() (localctx IValueContext) {
 
 func (p *SQLQueryParser) Sempred(localctx antlr.RuleContext, ruleIndex, predIndex int) bool {
 	switch ruleIndex {
-	case 4:
+	case 6:
 		var t *ExprContext = nil
 		if localctx != nil {
 			t = localctx.(*ExprContext)

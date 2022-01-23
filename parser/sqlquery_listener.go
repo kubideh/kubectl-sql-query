@@ -14,6 +14,12 @@ type SQLQueryListener interface {
 	// EnterStatement is called when entering the statement production.
 	EnterStatement(c *StatementContext)
 
+	// EnterFieldList is called when entering the fieldList production.
+	EnterFieldList(c *FieldListContext)
+
+	// EnterField is called when entering the field production.
+	EnterField(c *FieldContext)
+
 	// EnterTableName is called when entering the tableName production.
 	EnterTableName(c *TableNameContext)
 
@@ -26,8 +32,8 @@ type SQLQueryListener interface {
 	// EnterEvaluation is called when entering the evaluation production.
 	EnterEvaluation(c *EvaluationContext)
 
-	// EnterField is called when entering the field production.
-	EnterField(c *FieldContext)
+	// EnterKey is called when entering the key production.
+	EnterKey(c *KeyContext)
 
 	// EnterValue is called when entering the value production.
 	EnterValue(c *ValueContext)
@@ -37,6 +43,12 @@ type SQLQueryListener interface {
 
 	// ExitStatement is called when exiting the statement production.
 	ExitStatement(c *StatementContext)
+
+	// ExitFieldList is called when exiting the fieldList production.
+	ExitFieldList(c *FieldListContext)
+
+	// ExitField is called when exiting the field production.
+	ExitField(c *FieldContext)
 
 	// ExitTableName is called when exiting the tableName production.
 	ExitTableName(c *TableNameContext)
@@ -50,8 +62,8 @@ type SQLQueryListener interface {
 	// ExitEvaluation is called when exiting the evaluation production.
 	ExitEvaluation(c *EvaluationContext)
 
-	// ExitField is called when exiting the field production.
-	ExitField(c *FieldContext)
+	// ExitKey is called when exiting the key production.
+	ExitKey(c *KeyContext)
 
 	// ExitValue is called when exiting the value production.
 	ExitValue(c *ValueContext)

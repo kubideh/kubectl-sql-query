@@ -23,13 +23,16 @@ func TestParser(t *testing.T) {
 			// Selection is optional
 			query:              "SELECT * FROM pods",
 			expectedErrorCount: 0,
-			expectedListener:   ListenerImpl{},
+			expectedListener: ListenerImpl{
+				Kind: "pods",
+			},
 		},
 		{
 			// Selection by namespace TODO(evan) ensure valid K8s namespace format
 			query:              "SELECT * FROM pods WHERE namespace=default",
 			expectedErrorCount: 0,
 			expectedListener: ListenerImpl{
+				Kind:      "pods",
 				Namespace: "default",
 			},
 		},
@@ -38,6 +41,7 @@ func TestParser(t *testing.T) {
 			query:              "SELECT * FROM pods WHERE name=blargle1-flargle2.example.com",
 			expectedErrorCount: 0,
 			expectedListener: ListenerImpl{
+				Kind: "pods",
 				Name: "blargle1-flargle2.example.com",
 			},
 		},
@@ -46,8 +50,9 @@ func TestParser(t *testing.T) {
 			query:              "SELECT * FROM pods WHERE name=blargle AND namespace=flargle",
 			expectedErrorCount: 0,
 			expectedListener: ListenerImpl{
-				Name:      "blargle",
+				Kind:      "pods",
 				Namespace: "flargle",
+				Name:      "blargle",
 			},
 		},
 		{
@@ -55,18 +60,49 @@ func TestParser(t *testing.T) {
 			query:              "SELECT * FROM pods WHERE name=fake-name AND namespace=fake-namespace AND foo=bar AND blargle=flargle",
 			expectedErrorCount: 0,
 			expectedListener: ListenerImpl{
-				Name:      "fake-name",
 				Namespace: "fake-namespace",
+				Kind:      "pods",
+				Name:      "fake-name",
 				SelectionFields: map[string]string{
 					"foo":     "bar",
 					"blargle": "flargle",
 				},
 			},
 		},
-
-		// TODO(evan) Allow fields in projection
-
-		// TODO(evan) Allow different object kinds in selection
+		{
+			// Select different object kind
+			query:              "SELECT * FROM deployments WHERE name=fake-name AND namespace=fake-namespace AND foo=bar AND blargle=flargle",
+			expectedErrorCount: 0,
+			expectedListener: ListenerImpl{
+				Kind:      "deployments",
+				Namespace: "fake-namespace",
+				Name:      "fake-name",
+				SelectionFields: map[string]string{
+					"foo":     "bar",
+					"blargle": "flargle",
+				},
+			},
+		},
+		{
+			// Project multiple fields
+			query:              "SELECT name, namespace, foo, bar FROM deployments WHERE name=fake-name AND namespace=fake-namespace AND foo=bar AND blargle=flargle",
+			expectedErrorCount: 0,
+			expectedListener: ListenerImpl{
+				Kind:      "deployments",
+				Namespace: "fake-namespace",
+				Name:      "fake-name",
+				SelectionFields: map[string]string{
+					"foo":     "bar",
+					"blargle": "flargle",
+				},
+				ProjectionFields: []string{
+					"name",
+					"namespace",
+					"foo",
+					"bar",
+				},
+			},
+		},
 
 		// TODO(evan) Allow (INNER) JOIN
 
@@ -87,7 +123,10 @@ func TestParser(t *testing.T) {
 			antlr.ParseTreeWalkerDefault.Walk(&listener, p.Query())
 
 			assert.Equal(t, c.expectedErrorCount, errorListener.Count)
-			assert.Equal(t, c.expectedListener.SelectionFields, listener.SelectionFields)
+
+			listener.field = ""
+			listener.value = ""
+			assert.Equal(t, c.expectedListener, listener)
 		})
 	}
 }
