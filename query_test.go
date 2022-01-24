@@ -30,19 +30,26 @@ func TestQueryFunction(t *testing.T) {
 			expectedOutput:   "NAME                                AGE\nkube-apiserver-kind-control-plane   <unknown>\n",
 			expectedError:    "",
 		},
-		// Select all pods in a namespace
+		// Select all pods in a particular namespace
 		{
 			defaultNamespace: "",
-			sqlQuery:         "SELECT * FROM pods WHERE namespace=default",
+			sqlQuery:         "SELECT * FROM pods WHERE namespace=blargle",
 			expectedOutput:   "",
-			expectedError:    "No resources found in default namespace.\n",
+			expectedError:    "No resources found in blargle namespace.\n",
 		},
 		// Select all pods using default namespace
 		{
-			defaultNamespace: "default",
+			defaultNamespace: "blargle",
 			sqlQuery:         "SELECT * FROM pods",
 			expectedOutput:   "",
-			expectedError:    "No resources found in default namespace.\n",
+			expectedError:    "No resources found in blargle namespace.\n",
+		},
+		// Select a non-existent pod
+		{
+			defaultNamespace: "blargle",
+			sqlQuery:         "SELECT * FROM pods WHERE name=missing-pod",
+			expectedOutput:   "",
+			expectedError:    "No resources found in blargle namespace.\n",
 		},
 		// Select all deployments using default namespace
 		{
@@ -58,6 +65,29 @@ func TestQueryFunction(t *testing.T) {
 			expectedOutput:   "NAME              AGE\nfake-deployment   <unknown>\n",
 			expectedError:    "",
 		},
+		// Select a non-existent deployment
+		{
+			defaultNamespace: "blargle",
+			sqlQuery:         "SELECT * FROM deployments WHERE name=missing-deployment",
+			expectedOutput:   "",
+			expectedError:    "No resources found in blargle namespace.\n",
+		},
+		//// Select all objects in a particular namespace
+		//{
+		//	defaultNamespace: "",
+		//	sqlQuery:         "SELECT * FROM * WHERE namespace=multi-space",
+		//	expectedOutput: "NAME              AGE\nfake-deployment   <unknown>\n" +
+		//		"NAME              AGE\nfake-pod   <unknown>\n",
+		//	expectedError: "",
+		//},
+		//// Select some objects in a particular namespace
+		//{
+		//	defaultNamespace: "",
+		//	sqlQuery:         "SELECT * FROM deployments, pods WHERE namespace=multi-space",
+		//	expectedOutput: "NAME              AGE\nfake-deployment   <unknown>\n" +
+		//		"NAME              AGE\nfake-pod   <unknown>\n",
+		//	expectedError: "",
+		//},
 	}
 
 	for _, c := range cases {
