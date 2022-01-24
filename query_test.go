@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -22,23 +23,40 @@ func TestQueryFunction(t *testing.T) {
 		expectedOutput   string
 		expectedError    string
 	}{
+		// Select pod by name and namespace
 		{
 			defaultNamespace: "",
 			sqlQuery:         "SELECT * FROM pods WHERE name=kube-apiserver-kind-control-plane AND namespace=kube-system",
 			expectedOutput:   "NAME                                AGE\nkube-apiserver-kind-control-plane   <unknown>\n",
 			expectedError:    "",
 		},
+		// Select all pods in a namespace
 		{
 			defaultNamespace: "",
 			sqlQuery:         "SELECT * FROM pods WHERE namespace=default",
 			expectedOutput:   "",
 			expectedError:    "No resources found in default namespace.\n",
 		},
+		// Select all pods using default namespace
 		{
 			defaultNamespace: "default",
 			sqlQuery:         "SELECT * FROM pods",
 			expectedOutput:   "",
 			expectedError:    "No resources found in default namespace.\n",
+		},
+		// Select all deployments using default namespace
+		{
+			defaultNamespace: "blargle",
+			sqlQuery:         "SELECT * FROM deployments",
+			expectedOutput:   "NAME              AGE\nfake-deployment   <unknown>\n",
+			expectedError:    "",
+		},
+		// Select a particular deployment
+		{
+			defaultNamespace: "blargle",
+			sqlQuery:         "SELECT * FROM deployments WHERE name=fake-deployment",
+			expectedOutput:   "NAME              AGE\nfake-deployment   <unknown>\n",
+			expectedError:    "",
 		},
 	}
 
@@ -57,6 +75,16 @@ func TestQueryFunction(t *testing.T) {
 }
 
 func setupQueryTest(t *testing.T, fakeClientSet *fake.Clientset) {
+	fakeClientSet.AppsV1().Deployments("blargle").Create(
+		context.TODO(),
+		&appsv1.Deployment{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "blargle",
+				Name:      "fake-deployment",
+			},
+		},
+		metav1.CreateOptions{},
+	)
 	fakeClientSet.CoreV1().Pods("kube-system").Create(
 		context.TODO(),
 		&v1.Pod{
