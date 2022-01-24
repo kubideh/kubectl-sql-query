@@ -3,7 +3,7 @@ package query
 import (
 	"github.com/antlr/antlr4/runtime/Go/antlr"
 	"github.com/kubideh/kubectl-sql-query/finders"
-	"github.com/kubideh/kubectl-sql-query/sql"
+	"github.com/kubideh/kubectl-sql-query/query/sql"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 )

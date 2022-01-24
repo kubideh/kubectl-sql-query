@@ -4,7 +4,7 @@ package sql
 
 import (
 	"github.com/antlr/antlr4/runtime/Go/antlr"
-	"github.com/kubideh/kubectl-sql-query/sql/parser"
+	parser2 "github.com/kubideh/kubectl-sql-query/query/sql/parser"
 )
 
 // ErrorListenerImpl is an antlr.ErrorListener, and it tracks
@@ -35,7 +35,7 @@ var _ antlr.ErrorListener = &ErrorListenerImpl{}
 // tokens parsed from the SQL query, which are needed to construct
 // a query against the Kubernetes API.
 type ListenerImpl struct {
-	parser.BaseSQLQueryListener
+	parser2.BaseSQLQueryListener
 	field            string
 	value            string
 	Kind             string
@@ -46,7 +46,7 @@ type ListenerImpl struct {
 }
 
 // ExitField is called when production field is exited.
-func (l *ListenerImpl) ExitField(ctx *parser.FieldContext) {
+func (l *ListenerImpl) ExitField(ctx *parser2.FieldContext) {
 	if ctx.GetText() == "*" {
 		return
 	}
@@ -55,17 +55,17 @@ func (l *ListenerImpl) ExitField(ctx *parser.FieldContext) {
 }
 
 // ExitKey is called when production key is exited.
-func (l *ListenerImpl) ExitKey(ctx *parser.KeyContext) {
+func (l *ListenerImpl) ExitKey(ctx *parser2.KeyContext) {
 	l.field = ctx.GetText()
 }
 
 // ExitTableName is called when production tableName is exited.
-func (l *ListenerImpl) ExitTableName(ctx *parser.TableNameContext) {
+func (l *ListenerImpl) ExitTableName(ctx *parser2.TableNameContext) {
 	l.Kind = ctx.GetText()
 }
 
 // ExitValue is called when production value is exited.
-func (l *ListenerImpl) ExitValue(ctx *parser.ValueContext) {
+func (l *ListenerImpl) ExitValue(ctx *parser2.ValueContext) {
 	if l.field == "name" {
 		l.Name = ctx.GetText()
 	} else if l.field == "namespace" {
@@ -78,9 +78,9 @@ func (l *ListenerImpl) ExitValue(ctx *parser.ValueContext) {
 	}
 }
 
-var _ parser.SQLQueryListener = &ListenerImpl{}
+var _ parser2.SQLQueryListener = &ListenerImpl{}
 
-func CreateParser(errorListener *ErrorListenerImpl, query string) *parser.SQLQueryParser {
+func CreateParser(errorListener *ErrorListenerImpl, query string) *parser2.SQLQueryParser {
 	inputStream := createInputStream(query)
 
 	lexer := createLexer(errorListener, inputStream)
@@ -94,19 +94,19 @@ func createInputStream(query string) *antlr.InputStream {
 	return antlr.NewInputStream(query)
 }
 
-func createLexer(errorListener *ErrorListenerImpl, inputStream *antlr.InputStream) (lexer *parser.SQLQueryLexer) {
-	lexer = parser.NewSQLQueryLexer(inputStream)
+func createLexer(errorListener *ErrorListenerImpl, inputStream *antlr.InputStream) (lexer *parser2.SQLQueryLexer) {
+	lexer = parser2.NewSQLQueryLexer(inputStream)
 	lexer.AddErrorListener(errorListener)
 
 	return
 }
 
-func createTokenStream(lexer *parser.SQLQueryLexer) *antlr.CommonTokenStream {
+func createTokenStream(lexer *parser2.SQLQueryLexer) *antlr.CommonTokenStream {
 	return antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel)
 }
 
-func createParser(errorListener *ErrorListenerImpl, tokenStream *antlr.CommonTokenStream) (queryParser *parser.SQLQueryParser) {
-	queryParser = parser.NewSQLQueryParser(tokenStream)
+func createParser(errorListener *ErrorListenerImpl, tokenStream *antlr.CommonTokenStream) (queryParser *parser2.SQLQueryParser) {
+	queryParser = parser2.NewSQLQueryParser(tokenStream)
 	queryParser.AddErrorListener(errorListener)
 
 	return
