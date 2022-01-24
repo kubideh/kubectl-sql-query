@@ -1,4 +1,4 @@
-package main
+package finders
 
 import (
 	"k8s.io/apimachinery/pkg/runtime"

@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"os"
 
+	query2 "github.com/kubideh/kubectl-sql-query/query"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
-
-//go:generate antlr -Dlanguage=Go -Werror -o parser SQLQuery.g4
 
 const usageString = `kubectl-sql-query is the kubectl plugin to query the Kubernetes API server using SQL.
 
@@ -26,7 +25,7 @@ func main() {
 
 	kubeConfig := createKubeConfig()
 
-	query := CreateQuery(createStreams(), createClientSet(kubeConfig), defaultNamespace(kubeConfig))
+	query := query2.CreateQuery(createStreams(), createClientSet(kubeConfig), defaultNamespace(kubeConfig))
 
 	query.Run(flag.Arg(0))
 }

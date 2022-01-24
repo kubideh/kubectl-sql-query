@@ -1,8 +1,10 @@
-package main
+package sql
+
+//go:generate antlr -Dlanguage=Go -Werror -o parser SQLQuery.g4
 
 import (
 	"github.com/antlr/antlr4/runtime/Go/antlr"
-	"github.com/kubideh/kubectl-sql-query/parser"
+	"github.com/kubideh/kubectl-sql-query/sql/parser"
 )
 
 // ErrorListenerImpl is an antlr.ErrorListener, and it tracks

@@ -1,7 +1,9 @@
-package main
+package query
 
 import (
 	"github.com/antlr/antlr4/runtime/Go/antlr"
+	"github.com/kubideh/kubectl-sql-query/finders"
+	"github.com/kubideh/kubectl-sql-query/sql"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 )
@@ -13,9 +15,9 @@ type Query struct {
 }
 
 func (q *Query) Run(sqlQuery string) {
-	var errorListener ErrorListenerImpl
-	var listener ListenerImpl
-	p := CreateParser(&errorListener, sqlQuery)
+	var errorListener sql.ErrorListenerImpl
+	var listener sql.ListenerImpl
+	p := sql.CreateParser(&errorListener, sqlQuery)
 
 	antlr.ParseTreeWalkerDefault.Walk(&listener, p.Query())
 
@@ -23,7 +25,7 @@ func (q *Query) Run(sqlQuery string) {
 		panic("Found errors in input")
 	}
 
-	finder := CreateFinder(q.clientSet, listener.Kind)
+	finder := finders.CreateFinder(q.clientSet, listener.Kind)
 	results := finder.Find(namespaceFrom(&listener, q.defaultNamespace), listener.Name)
 
 	printer := CreatePrinter(q.streams)
@@ -38,7 +40,7 @@ func CreateQuery(streams genericclioptions.IOStreams, clientSet kubernetes.Inter
 	}
 }
 
-func namespaceFrom(listener *ListenerImpl, defaultNamespace string) (result string) {
+func namespaceFrom(listener *sql.ListenerImpl, defaultNamespace string) (result string) {
 	result = defaultNamespace
 
 	if listener.Namespace != "" {
