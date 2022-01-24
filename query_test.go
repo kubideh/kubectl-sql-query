@@ -94,9 +94,9 @@ func TestQueryFunction(t *testing.T) {
 		t.Run(c.defaultNamespace+":"+c.sqlQuery, func(t *testing.T) {
 			fakeClientSet := fake.NewSimpleClientset()
 			setupQueryTest(t, fakeClientSet)
-			streams, _, outBuf, errBuf := genericclioptions.NewTestIOStreams()
 
-			query(streams, fakeClientSet, c.defaultNamespace, c.sqlQuery)
+			streams, _, outBuf, errBuf := genericclioptions.NewTestIOStreams()
+			CreateQuery(streams, fakeClientSet, c.defaultNamespace).Run(c.sqlQuery)
 
 			assert.Equal(t, c.expectedOutput, outBuf.String())
 			assert.Equal(t, c.expectedError, errBuf.String())

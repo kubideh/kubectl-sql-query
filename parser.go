@@ -5,8 +5,8 @@ import (
 	"github.com/kubideh/kubectl-sql-query/parser"
 )
 
-// ErrorListenerImpl is an antlr.ErrorListener, and  tracks errors
-// when parsing the SQL query string.
+// ErrorListenerImpl is an antlr.ErrorListener, and it tracks
+// errors when parsing the SQL query string.
 type ErrorListenerImpl struct {
 	Count int
 }
@@ -79,18 +79,33 @@ func (l *ListenerImpl) ExitValue(ctx *parser.ValueContext) {
 var _ parser.SQLQueryListener = &ListenerImpl{}
 
 func CreateParser(errorListener *ErrorListenerImpl, query string) *parser.SQLQueryParser {
-	// Set up the input
-	inputStream := antlr.NewInputStream(query)
+	inputStream := createInputStream(query)
 
-	// Create the Lexer
-	lexer := parser.NewSQLQueryLexer(inputStream)
+	lexer := createLexer(errorListener, inputStream)
+
+	tokenStream := createTokenStream(lexer)
+
+	return createParser(errorListener, tokenStream)
+}
+
+func createInputStream(query string) *antlr.InputStream {
+	return antlr.NewInputStream(query)
+}
+
+func createLexer(errorListener *ErrorListenerImpl, inputStream *antlr.InputStream) (lexer *parser.SQLQueryLexer) {
+	lexer = parser.NewSQLQueryLexer(inputStream)
 	lexer.AddErrorListener(errorListener)
 
-	tokenStream := antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel)
+	return
+}
 
-	// Create the parser
-	p := parser.NewSQLQueryParser(tokenStream)
-	p.AddErrorListener(errorListener)
+func createTokenStream(lexer *parser.SQLQueryLexer) *antlr.CommonTokenStream {
+	return antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel)
+}
 
-	return p
+func createParser(errorListener *ErrorListenerImpl, tokenStream *antlr.CommonTokenStream) (queryParser *parser.SQLQueryParser) {
+	queryParser = parser.NewSQLQueryParser(tokenStream)
+	queryParser.AddErrorListener(errorListener)
+
+	return
 }

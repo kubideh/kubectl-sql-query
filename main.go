@@ -22,6 +22,16 @@ Flags:
 `
 
 func main() {
+	createFlags()
+
+	kubeConfig := createKubeConfig()
+
+	query := CreateQuery(createStreams(), createClientSet(kubeConfig), defaultNamespace(kubeConfig))
+
+	query.Run(flag.Arg(0))
+}
+
+func createFlags() {
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), usageString)
 	}
@@ -32,28 +42,45 @@ func main() {
 		flag.Usage()
 		os.Exit(0)
 	}
+}
 
-	clientConfigLoadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
-	configOverrides := &clientcmd.ConfigOverrides{}
-	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(clientConfigLoadingRules, configOverrides)
-	clientConfig, err := kubeConfig.ClientConfig()
-	if err != nil {
-		panic(err.Error())
-	}
-	clientSet, err := kubernetes.NewForConfig(clientConfig)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	streams := genericclioptions.IOStreams{
+func createStreams() genericclioptions.IOStreams {
+	return genericclioptions.IOStreams{
 		Out:    os.Stdout,
 		ErrOut: os.Stderr,
 	}
+}
 
-	defaultNamespace, _, err := kubeConfig.Namespace()
+func createKubeConfig() clientcmd.ClientConfig {
+	clientConfigLoadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+
+	configOverrides := &clientcmd.ConfigOverrides{}
+
+	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(clientConfigLoadingRules, configOverrides)
+}
+
+func defaultNamespace(kubeConfig clientcmd.ClientConfig) (result string) {
+	result, _, err := kubeConfig.Namespace()
+
 	if err != nil {
 		panic(err.Error())
 	}
 
-	query(streams, clientSet, defaultNamespace, flag.Arg(0))
+	return
+}
+
+func createClientSet(kubeConfig clientcmd.ClientConfig) *kubernetes.Clientset {
+	clientConfig, err := kubeConfig.ClientConfig()
+
+	if err != nil {
+		panic(err.Error())
+	}
+
+	clientSet, err := kubernetes.NewForConfig(clientConfig)
+
+	if err != nil {
+		panic(err.Error())
+	}
+
+	return clientSet
 }
