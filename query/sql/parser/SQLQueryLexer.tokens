@@ -10,7 +10,3 @@ WHITESPACE=9
 ','=1
 '*'=2
 '='=3
-'FROM'=4
-'SELECT'=5
-'WHERE'=6
-'AND'=7

@@ -43,7 +43,7 @@ var parserATN = []uint16{
 	37, 55,
 }
 var literalNames = []string{
-	"", "','", "'*'", "'='", "'FROM'", "'SELECT'", "'WHERE'", "'AND'",
+	"", "','", "'*'", "'='",
 }
 var symbolicNames = []string{
 	"", "", "ALL", "EQ", "FROM", "SELECT", "WHERE", "AND", "IDENTIFIER", "WHITESPACE",

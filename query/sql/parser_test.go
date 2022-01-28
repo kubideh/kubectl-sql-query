@@ -103,6 +103,20 @@ func TestParser(t *testing.T) {
 				},
 			},
 		},
+		{
+			// Mixed-case keywords
+			query:              "SeLeCt * FrOm pods WhErE name=fake-name AnD namespace=fake-namespace aNd foo=bar and blargle=flargle",
+			expectedErrorCount: 0,
+			expectedListener: ListenerImpl{
+				Namespace: "fake-namespace",
+				Kind:      "pods",
+				Name:      "fake-name",
+				SelectionFields: map[string]string{
+					"foo":     "bar",
+					"blargle": "flargle",
+				},
+			},
+		},
 
 		// TODO(evan) Allow (INNER) JOIN
 
