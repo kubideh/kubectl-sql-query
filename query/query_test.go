@@ -11,7 +11,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"k8s.io/cli-runtime/pkg/printers"
 	"k8s.io/client-go/kubernetes/fake"
 )
 
@@ -32,6 +31,10 @@ func TestQueryFunction(t *testing.T) {
 				_, err := fakeClientSet.CoreV1().Pods("kube-system").Create(
 					context.TODO(),
 					&v1.Pod{
+						TypeMeta: metav1.TypeMeta{
+							Kind:       "pods",
+							APIVersion: "v1",
+						},
 						ObjectMeta: metav1.ObjectMeta{
 							Namespace: "kube-system",
 							Name:      "kube-apiserver-kind-control-plane",
@@ -47,10 +50,13 @@ func TestQueryFunction(t *testing.T) {
 			defaultNamespace: "",
 			sqlQuery:         "SELECT * FROM pods WHERE name=kube-apiserver-kind-control-plane AND namespace=kube-system",
 			printExpectedOutput: func(w io.Writer) {
-				printer := printers.NewTablePrinter(printers.PrintOptions{})
-
+				printer := CreatePodPrinter()
 				err := printer.PrintObj(
 					&v1.Pod{
+						TypeMeta: metav1.TypeMeta{
+							Kind:       "pods",
+							APIVersion: "v1",
+						},
 						ObjectMeta: metav1.ObjectMeta{
 							Namespace: "kube-system",
 							Name:      "kube-apiserver-kind-control-plane",
@@ -93,6 +99,10 @@ func TestQueryFunction(t *testing.T) {
 				_, err := fakeClientSet.AppsV1().Deployments("blargle").Create(
 					context.Background(),
 					&appsv1.Deployment{
+						TypeMeta: metav1.TypeMeta{
+							Kind:       "deployments",
+							APIVersion: "apps/v1",
+						},
 						ObjectMeta: metav1.ObjectMeta{
 							Namespace: "blargle",
 							Name:      "fake-deployment",
@@ -108,10 +118,13 @@ func TestQueryFunction(t *testing.T) {
 			defaultNamespace: "blargle",
 			sqlQuery:         "SELECT * FROM deployments",
 			printExpectedOutput: func(w io.Writer) {
-				printer := printers.NewTablePrinter(printers.PrintOptions{})
-
+				printer := CreateDeploymentPrinter()
 				err := printer.PrintObj(
 					&appsv1.Deployment{
+						TypeMeta: metav1.TypeMeta{
+							Kind:       "deployments",
+							APIVersion: "apps/v1",
+						},
 						ObjectMeta: metav1.ObjectMeta{
 							Namespace: "blargle",
 							Name:      "fake-deployment",
@@ -130,6 +143,10 @@ func TestQueryFunction(t *testing.T) {
 				_, err := fakeClientSet.AppsV1().Deployments("blargle").Create(
 					context.Background(),
 					&appsv1.Deployment{
+						TypeMeta: metav1.TypeMeta{
+							Kind:       "deployments",
+							APIVersion: "apps/v1",
+						},
 						ObjectMeta: metav1.ObjectMeta{
 							Namespace: "blargle",
 							Name:      "fake-deployment",
@@ -145,10 +162,13 @@ func TestQueryFunction(t *testing.T) {
 			defaultNamespace: "blargle",
 			sqlQuery:         "SELECT * FROM deployments WHERE name=fake-deployment",
 			printExpectedOutput: func(w io.Writer) {
-				printer := printers.NewTablePrinter(printers.PrintOptions{})
-
+				printer := CreateDeploymentPrinter()
 				err := printer.PrintObj(
 					&appsv1.Deployment{
+						TypeMeta: metav1.TypeMeta{
+							Kind:       "deployments",
+							APIVersion: "apps/v1",
+						},
 						ObjectMeta: metav1.ObjectMeta{
 							Namespace: "blargle",
 							Name:      "fake-deployment",

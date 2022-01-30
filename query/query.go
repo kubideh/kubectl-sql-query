@@ -30,7 +30,7 @@ func (q *Query) Run(sqlQuery string) {
 	finder := finders.Create(q.clientSet, listener.Kind)
 	results := finder.Find(namespaceFrom(&listener, q.defaultNamespace), listener.Name)
 
-	printer := CreatePrinter(q.streams)
+	printer := CreatePrinter(q.streams, listener.Kind)
 	printer.Print(namespaceFrom(&listener, q.defaultNamespace), results)
 }
 

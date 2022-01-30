@@ -2,12 +2,50 @@ package query
 
 import (
 	"fmt"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/cli-runtime/pkg/printers"
 )
+
+// CreatePodPrinter returns a new printer for Pods.
+func CreatePodPrinter() printers.ResourcePrinter {
+	return printers.NewTablePrinter(printers.PrintOptions{
+		NoHeaders:     false,
+		WithNamespace: true,
+		WithKind:      false,
+		Wide:          false,
+		ShowLabels:    false,
+		Kind: schema.GroupKind{
+			Group: "v1",
+			Kind:  "pods",
+		},
+		ColumnLabels:     nil,
+		SortBy:           "",
+		AllowMissingKeys: false,
+	})
+}
+
+// CreateDeploymentPrinter returns a new printer for Pods.
+func CreateDeploymentPrinter() printers.ResourcePrinter {
+	return printers.NewTablePrinter(printers.PrintOptions{
+		NoHeaders:     false,
+		WithNamespace: true,
+		WithKind:      false,
+		Wide:          false,
+		ShowLabels:    false,
+		Kind: schema.GroupKind{
+			Group: "apps/v1",
+			Kind:  "deployments",
+		},
+		ColumnLabels:     nil,
+		SortBy:           "",
+		AllowMissingKeys: false,
+	})
+}
 
 // ResourcePrinterWrap is a local extension to the ResourcePrinter
 // in cli-runtime, and it is paired with an I/O stream set.
@@ -17,9 +55,16 @@ type ResourcePrinterWrap struct {
 }
 
 // CreatePrinter returns a new ResourcePrinterWrap.
-func CreatePrinter(streams genericclioptions.IOStreams) ResourcePrinterWrap {
+func CreatePrinter(streams genericclioptions.IOStreams, kind string) ResourcePrinterWrap {
+	var printer printers.ResourcePrinter
+
+	if strings.EqualFold(kind, "pods") {
+		printer = CreatePodPrinter()
+	} else if strings.EqualFold(kind, "deployments") {
+		printer = CreateDeploymentPrinter()
+	}
 	return ResourcePrinterWrap{
-		printer: printers.NewTablePrinter(printers.PrintOptions{}),
+		printer: printer,
 		streams: streams,
 	}
 }
