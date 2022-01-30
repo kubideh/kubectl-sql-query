@@ -178,7 +178,8 @@ func TestQueryFunction(t *testing.T) {
 			c.setupFakes(fakeClientSet)
 
 			streams, _, outBuf, errBuf := genericclioptions.NewTestIOStreams()
-			Create(streams, fakeClientSet, c.defaultNamespace).Run(c.sqlQuery)
+			queryCmd := Create(streams, fakeClientSet, c.defaultNamespace)
+			queryCmd.Run(c.sqlQuery)
 
 			expectedOutBuf := new(bytes.Buffer)
 			c.printExpectedOutput(expectedOutBuf)
