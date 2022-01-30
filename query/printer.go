@@ -29,7 +29,7 @@ func CreatePodPrinter() printers.ResourcePrinter {
 	})
 }
 
-// CreateDeploymentPrinter returns a new printer for Pods.
+// CreateDeploymentPrinter returns a new printer for Deployments.
 func CreateDeploymentPrinter() printers.ResourcePrinter {
 	return printers.NewTablePrinter(printers.PrintOptions{
 		NoHeaders:     false,
