@@ -9,11 +9,14 @@ import (
 	"k8s.io/cli-runtime/pkg/printers"
 )
 
+// ResourcePrinterWrap is a local extension to the ResourcePrinter
+// in cli-runtime, and it is paired with an I/O stream set.
 type ResourcePrinterWrap struct {
 	printer printers.ResourcePrinter
 	streams genericclioptions.IOStreams
 }
 
+// CreatePrinter returns a new ResourcePrinterWrap.
 func CreatePrinter(streams genericclioptions.IOStreams) ResourcePrinterWrap {
 	return ResourcePrinterWrap{
 		printer: printers.NewTablePrinter(printers.PrintOptions{}),
@@ -21,17 +24,16 @@ func CreatePrinter(streams genericclioptions.IOStreams) ResourcePrinterWrap {
 	}
 }
 
+// Print the results to the provided I/O streams.
 func (p ResourcePrinterWrap) Print(namespace string, results runtime.Object) {
-	printer := printers.NewTablePrinter(printers.PrintOptions{})
-
 	if meta.IsListType(results) {
 		if countItems(results) == 0 {
 			fmt.Fprintf(p.streams.ErrOut, "No resources found in %s namespace.\n", namespace)
 		} else {
-			printer.PrintObj(results, p.streams.Out)
+			p.printer.PrintObj(results, p.streams.Out)
 		}
 	} else {
-		printer.PrintObj(results, p.streams.Out)
+		p.printer.PrintObj(results, p.streams.Out)
 	}
 }
 

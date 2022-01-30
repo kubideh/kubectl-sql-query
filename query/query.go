@@ -8,16 +8,18 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// Query is a command that executes an SQL-query against the K8s API.
 type Query struct {
 	streams          genericclioptions.IOStreams
 	clientSet        kubernetes.Interface
 	defaultNamespace string
 }
 
+// Run the given SQL-query and print the results to the provided I/O streams.
 func (q *Query) Run(sqlQuery string) {
 	var errorListener sql.ErrorListenerImpl
 	var listener sql.ListenerImpl
-	p := sql.CreateParser(&errorListener, sqlQuery)
+	p := sql.Create(&errorListener, sqlQuery)
 
 	antlr.ParseTreeWalkerDefault.Walk(&listener, p.Query())
 
@@ -25,14 +27,15 @@ func (q *Query) Run(sqlQuery string) {
 		panic("Found errors in input")
 	}
 
-	finder := finders.CreateFinder(q.clientSet, listener.Kind)
+	finder := finders.Create(q.clientSet, listener.Kind)
 	results := finder.Find(namespaceFrom(&listener, q.defaultNamespace), listener.Name)
 
 	printer := CreatePrinter(q.streams)
 	printer.Print(namespaceFrom(&listener, q.defaultNamespace), results)
 }
 
-func CreateQuery(streams genericclioptions.IOStreams, clientSet kubernetes.Interface, defaultNamespace string) *Query {
+// Create returns a new Query object.
+func Create(streams genericclioptions.IOStreams, clientSet kubernetes.Interface, defaultNamespace string) *Query {
 	return &Query{
 		streams:          streams,
 		clientSet:        clientSet,

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -72,22 +73,6 @@ func TestQueryFunction(t *testing.T) {
 			expectedOutput:   "",
 			expectedError:    "No resources found in blargle namespace.\n",
 		},
-		//// Select all objects in a particular namespace
-		//{
-		//	defaultNamespace: "",
-		//	sqlQuery:         "SELECT * FROM * WHERE namespace=multi-space",
-		//	expectedOutput: "NAME              AGE\nfake-deployment   <unknown>\n" +
-		//		"NAME              AGE\nfake-pod   <unknown>\n",
-		//	expectedError: "",
-		//},
-		//// Select some objects in a particular namespace
-		//{
-		//	defaultNamespace: "",
-		//	sqlQuery:         "SELECT * FROM deployments, pods WHERE namespace=multi-space",
-		//	expectedOutput: "NAME              AGE\nfake-deployment   <unknown>\n" +
-		//		"NAME              AGE\nfake-pod   <unknown>\n",
-		//	expectedError: "",
-		//},
 	}
 
 	for _, c := range cases {
@@ -96,7 +81,7 @@ func TestQueryFunction(t *testing.T) {
 			setupQueryTest(t, fakeClientSet)
 
 			streams, _, outBuf, errBuf := genericclioptions.NewTestIOStreams()
-			CreateQuery(streams, fakeClientSet, c.defaultNamespace).Run(c.sqlQuery)
+			Create(streams, fakeClientSet, c.defaultNamespace).Run(c.sqlQuery)
 
 			assert.Equal(t, c.expectedOutput, outBuf.String())
 			assert.Equal(t, c.expectedError, errBuf.String())
@@ -105,7 +90,7 @@ func TestQueryFunction(t *testing.T) {
 }
 
 func setupQueryTest(t *testing.T, fakeClientSet *fake.Clientset) {
-	fakeClientSet.AppsV1().Deployments("blargle").Create(
+	_, err := fakeClientSet.AppsV1().Deployments("blargle").Create(
 		context.TODO(),
 		&appsv1.Deployment{
 			ObjectMeta: metav1.ObjectMeta{
@@ -115,7 +100,10 @@ func setupQueryTest(t *testing.T, fakeClientSet *fake.Clientset) {
 		},
 		metav1.CreateOptions{},
 	)
-	fakeClientSet.CoreV1().Pods("kube-system").Create(
+
+	require.NoError(t, err, "Failed to create fake deployment blargle/fake-deployment")
+
+	_, err = fakeClientSet.CoreV1().Pods("kube-system").Create(
 		context.TODO(),
 		&v1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
@@ -125,4 +113,6 @@ func setupQueryTest(t *testing.T, fakeClientSet *fake.Clientset) {
 		},
 		metav1.CreateOptions{},
 	)
+
+	require.NoError(t, err, "Failed to create fake pod kube-system/kube-apiserver-kind-control-plane")
 }

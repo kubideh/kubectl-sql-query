@@ -132,7 +132,7 @@ func TestParser(t *testing.T) {
 		t.Run(c.query, func(t *testing.T) {
 			var errorListener ErrorListenerImpl
 			var listener ListenerImpl
-			p := CreateParser(&errorListener, c.query)
+			p := Create(&errorListener, c.query)
 
 			antlr.ParseTreeWalkerDefault.Walk(&listener, p.Query())
 

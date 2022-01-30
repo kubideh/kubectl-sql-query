@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	query2 "github.com/kubideh/kubectl-sql-query/query"
+	"github.com/kubideh/kubectl-sql-query/query"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -25,9 +25,8 @@ func main() {
 
 	kubeConfig := createKubeConfig()
 
-	query := query2.CreateQuery(createStreams(), createClientSet(kubeConfig), defaultNamespace(kubeConfig))
-
-	query.Run(flag.Arg(0))
+	cmd := query.Create(createStreams(), createClientSet(kubeConfig), defaultNamespace(kubeConfig))
+	cmd.Run(sqlQuery())
 }
 
 func createFlags() {
@@ -82,4 +81,8 @@ func createClientSet(kubeConfig clientcmd.ClientConfig) *kubernetes.Clientset {
 	}
 
 	return clientSet
+}
+
+func sqlQuery() string {
+	return flag.Arg(0)
 }
