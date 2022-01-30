@@ -1,118 +1,190 @@
 package query
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/cli-runtime/pkg/printers"
 	"k8s.io/client-go/kubernetes/fake"
 )
 
-// one pod in a namespace
-// no pods in a namespace
-// multiple pods in a namespace
-
 func TestQueryFunction(t *testing.T) {
+	var nilFakeFunc = func(fakeClientSet *fake.Clientset) {}
+	var nilOutputFunc = func(w io.Writer) {}
+
 	cases := []struct {
-		defaultNamespace string
-		sqlQuery         string
-		expectedOutput   string
-		expectedError    string
+		setupFakes          func(fakeClientSet *fake.Clientset)
+		defaultNamespace    string
+		sqlQuery            string
+		printExpectedOutput func(w io.Writer)
+		expectedError       string
 	}{
 		// Select pod by name and namespace
 		{
+			setupFakes: func(fakeClientSet *fake.Clientset) {
+				_, err := fakeClientSet.CoreV1().Pods("kube-system").Create(
+					context.TODO(),
+					&v1.Pod{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: "kube-system",
+							Name:      "kube-apiserver-kind-control-plane",
+						},
+					},
+					metav1.CreateOptions{},
+				)
+
+				if err != nil {
+					panic(err.Error())
+				}
+			},
 			defaultNamespace: "",
 			sqlQuery:         "SELECT * FROM pods WHERE name=kube-apiserver-kind-control-plane AND namespace=kube-system",
-			expectedOutput:   "NAME                                AGE\nkube-apiserver-kind-control-plane   <unknown>\n",
-			expectedError:    "",
+			printExpectedOutput: func(w io.Writer) {
+				printer := printers.NewTablePrinter(printers.PrintOptions{})
+
+				err := printer.PrintObj(
+					&v1.Pod{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: "kube-system",
+							Name:      "kube-apiserver-kind-control-plane",
+						},
+					}, w)
+
+				if err != nil {
+					panic(err.Error())
+				}
+			},
+			expectedError: "",
 		},
 		// Select all pods in a particular namespace
 		{
-			defaultNamespace: "",
-			sqlQuery:         "SELECT * FROM pods WHERE namespace=blargle",
-			expectedOutput:   "",
-			expectedError:    "No resources found in blargle namespace.\n",
+			setupFakes:          nilFakeFunc,
+			defaultNamespace:    "",
+			sqlQuery:            "SELECT * FROM pods WHERE namespace=blargle",
+			printExpectedOutput: nilOutputFunc,
+			expectedError:       "No resources found in blargle namespace.\n",
 		},
 		// Select all pods using default namespace
 		{
-			defaultNamespace: "blargle",
-			sqlQuery:         "SELECT * FROM pods",
-			expectedOutput:   "",
-			expectedError:    "No resources found in blargle namespace.\n",
+			setupFakes:          nilFakeFunc,
+			defaultNamespace:    "blargle",
+			sqlQuery:            "SELECT * FROM pods",
+			printExpectedOutput: nilOutputFunc,
+			expectedError:       "No resources found in blargle namespace.\n",
 		},
 		// Select a non-existent pod
 		{
-			defaultNamespace: "blargle",
-			sqlQuery:         "SELECT * FROM pods WHERE name=missing-pod",
-			expectedOutput:   "",
-			expectedError:    "No resources found in blargle namespace.\n",
+			setupFakes:          nilFakeFunc,
+			defaultNamespace:    "blargle",
+			sqlQuery:            "SELECT * FROM pods WHERE name=missing-pod",
+			printExpectedOutput: nilOutputFunc,
+			expectedError:       "No resources found in blargle namespace.\n",
 		},
 		// Select all deployments using default namespace
 		{
+			setupFakes: func(fakeClientSet *fake.Clientset) {
+				_, err := fakeClientSet.AppsV1().Deployments("blargle").Create(
+					context.Background(),
+					&appsv1.Deployment{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: "blargle",
+							Name:      "fake-deployment",
+						},
+					},
+					metav1.CreateOptions{},
+				)
+
+				if err != nil {
+					panic(err.Error())
+				}
+			},
 			defaultNamespace: "blargle",
 			sqlQuery:         "SELECT * FROM deployments",
-			expectedOutput:   "NAME              AGE\nfake-deployment   <unknown>\n",
-			expectedError:    "",
+			printExpectedOutput: func(w io.Writer) {
+				printer := printers.NewTablePrinter(printers.PrintOptions{})
+
+				err := printer.PrintObj(
+					&appsv1.Deployment{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: "blargle",
+							Name:      "fake-deployment",
+						},
+					}, w)
+
+				if err != nil {
+					panic(err.Error())
+				}
+			},
+			expectedError: "",
 		},
 		// Select a particular deployment
 		{
+			setupFakes: func(fakeClientSet *fake.Clientset) {
+				_, err := fakeClientSet.AppsV1().Deployments("blargle").Create(
+					context.Background(),
+					&appsv1.Deployment{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: "blargle",
+							Name:      "fake-deployment",
+						},
+					},
+					metav1.CreateOptions{},
+				)
+
+				if err != nil {
+					panic(err.Error())
+				}
+			},
 			defaultNamespace: "blargle",
 			sqlQuery:         "SELECT * FROM deployments WHERE name=fake-deployment",
-			expectedOutput:   "NAME              AGE\nfake-deployment   <unknown>\n",
-			expectedError:    "",
+			printExpectedOutput: func(w io.Writer) {
+				printer := printers.NewTablePrinter(printers.PrintOptions{})
+
+				err := printer.PrintObj(
+					&appsv1.Deployment{
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: "blargle",
+							Name:      "fake-deployment",
+						},
+					}, w)
+
+				if err != nil {
+					panic(err.Error())
+				}
+			},
+			expectedError: "",
 		},
 		// Select a non-existent deployment
 		{
-			defaultNamespace: "blargle",
-			sqlQuery:         "SELECT * FROM deployments WHERE name=missing-deployment",
-			expectedOutput:   "",
-			expectedError:    "No resources found in blargle namespace.\n",
+			setupFakes:          nilFakeFunc,
+			defaultNamespace:    "blargle",
+			sqlQuery:            "SELECT * FROM deployments WHERE name=missing-deployment",
+			printExpectedOutput: nilOutputFunc,
+			expectedError:       "No resources found in blargle namespace.\n",
 		},
 	}
 
 	for _, c := range cases {
 		t.Run(c.defaultNamespace+":"+c.sqlQuery, func(t *testing.T) {
 			fakeClientSet := fake.NewSimpleClientset()
-			setupQueryTest(t, fakeClientSet)
+
+			c.setupFakes(fakeClientSet)
 
 			streams, _, outBuf, errBuf := genericclioptions.NewTestIOStreams()
 			Create(streams, fakeClientSet, c.defaultNamespace).Run(c.sqlQuery)
 
-			assert.Equal(t, c.expectedOutput, outBuf.String())
+			expectedOutBuf := new(bytes.Buffer)
+			c.printExpectedOutput(expectedOutBuf)
+
+			assert.Equal(t, expectedOutBuf.String(), outBuf.String())
 			assert.Equal(t, c.expectedError, errBuf.String())
 		})
 	}
-}
-
-func setupQueryTest(t *testing.T, fakeClientSet *fake.Clientset) {
-	_, err := fakeClientSet.AppsV1().Deployments("blargle").Create(
-		context.TODO(),
-		&appsv1.Deployment{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: "blargle",
-				Name:      "fake-deployment",
-			},
-		},
-		metav1.CreateOptions{},
-	)
-
-	require.NoError(t, err, "Failed to create fake deployment blargle/fake-deployment")
-
-	_, err = fakeClientSet.CoreV1().Pods("kube-system").Create(
-		context.TODO(),
-		&v1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: "kube-system",
-				Name:      "kube-apiserver-kind-control-plane",
-			},
-		},
-		metav1.CreateOptions{},
-	)
-
-	require.NoError(t, err, "Failed to create fake pod kube-system/kube-apiserver-kind-control-plane")
 }
