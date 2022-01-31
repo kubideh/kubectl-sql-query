@@ -118,7 +118,9 @@ func TestParser(t *testing.T) {
 				ProjectionColumns: []string{
 					"name",
 					"namespace",
+					"name",
 					"foo",
+					"name",
 					"bar",
 				},
 			},

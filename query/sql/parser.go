@@ -47,22 +47,7 @@ type ListenerImpl struct {
 
 // ExitColumn is called when production column is exited.
 func (l *ListenerImpl) ExitColumn(ctx *parser.ColumnContext) {
-	// Ignore duplicate columns.
-	if isDuplicateColumn(l.ProjectionColumns, ctx.GetText()) {
-		return
-	}
-
 	l.ProjectionColumns = append(l.ProjectionColumns, ctx.GetText())
-}
-
-func isDuplicateColumn(columns []string, theColumn string) bool {
-	for _, c := range columns {
-		if c == theColumn {
-			return true
-		}
-	}
-
-	return false
 }
 
 // ExitLhs is called when production lhs is exited.
