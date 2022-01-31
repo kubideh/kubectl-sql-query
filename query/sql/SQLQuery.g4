@@ -2,25 +2,29 @@
 grammar SQLQuery;
 
 // Rules
-query: statement EOF ;
+query: selectStatement EOF ;
 
-statement: SELECT fieldList FROM tableName (whereClause)? ;
+selectStatement: selectClause fromClause (whereClause)? ;
 
-fieldList: field (',' field)* ;
+selectClause: SELECT columns ;
 
-field: ALL | IDENTIFIER ;
+fromClause: FROM table ;
 
-tableName: IDENTIFIER ;
+columns: column (',' column)* ;
 
-whereClause: WHERE expr ;
+column: ALL | IDENTIFIER ;
 
-expr: evaluation | expr AND expr ;
+table: IDENTIFIER ;
 
-evaluation: key EQ value ;
+whereClause: WHERE predicate ;
 
-key: IDENTIFIER ;
+predicate: comparison | predicate AND predicate ;
 
-value: IDENTIFIER ;
+comparison: lhs EQ rhs ;
+
+lhs: IDENTIFIER ;
+
+rhs: IDENTIFIER ;
 
 // Tokens
 ALL:        '*' ;

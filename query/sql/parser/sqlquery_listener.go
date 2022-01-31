@@ -11,60 +11,72 @@ type SQLQueryListener interface {
 	// EnterQuery is called when entering the query production.
 	EnterQuery(c *QueryContext)
 
-	// EnterStatement is called when entering the statement production.
-	EnterStatement(c *StatementContext)
+	// EnterSelectStatement is called when entering the selectStatement production.
+	EnterSelectStatement(c *SelectStatementContext)
 
-	// EnterFieldList is called when entering the fieldList production.
-	EnterFieldList(c *FieldListContext)
+	// EnterSelectClause is called when entering the selectClause production.
+	EnterSelectClause(c *SelectClauseContext)
 
-	// EnterField is called when entering the field production.
-	EnterField(c *FieldContext)
+	// EnterFromClause is called when entering the fromClause production.
+	EnterFromClause(c *FromClauseContext)
 
-	// EnterTableName is called when entering the tableName production.
-	EnterTableName(c *TableNameContext)
+	// EnterColumns is called when entering the columns production.
+	EnterColumns(c *ColumnsContext)
+
+	// EnterColumn is called when entering the column production.
+	EnterColumn(c *ColumnContext)
+
+	// EnterTable is called when entering the table production.
+	EnterTable(c *TableContext)
 
 	// EnterWhereClause is called when entering the whereClause production.
 	EnterWhereClause(c *WhereClauseContext)
 
-	// EnterExpr is called when entering the expr production.
-	EnterExpr(c *ExprContext)
+	// EnterPredicate is called when entering the predicate production.
+	EnterPredicate(c *PredicateContext)
 
-	// EnterEvaluation is called when entering the evaluation production.
-	EnterEvaluation(c *EvaluationContext)
+	// EnterComparison is called when entering the comparison production.
+	EnterComparison(c *ComparisonContext)
 
-	// EnterKey is called when entering the key production.
-	EnterKey(c *KeyContext)
+	// EnterLhs is called when entering the lhs production.
+	EnterLhs(c *LhsContext)
 
-	// EnterValue is called when entering the value production.
-	EnterValue(c *ValueContext)
+	// EnterRhs is called when entering the rhs production.
+	EnterRhs(c *RhsContext)
 
 	// ExitQuery is called when exiting the query production.
 	ExitQuery(c *QueryContext)
 
-	// ExitStatement is called when exiting the statement production.
-	ExitStatement(c *StatementContext)
+	// ExitSelectStatement is called when exiting the selectStatement production.
+	ExitSelectStatement(c *SelectStatementContext)
 
-	// ExitFieldList is called when exiting the fieldList production.
-	ExitFieldList(c *FieldListContext)
+	// ExitSelectClause is called when exiting the selectClause production.
+	ExitSelectClause(c *SelectClauseContext)
 
-	// ExitField is called when exiting the field production.
-	ExitField(c *FieldContext)
+	// ExitFromClause is called when exiting the fromClause production.
+	ExitFromClause(c *FromClauseContext)
 
-	// ExitTableName is called when exiting the tableName production.
-	ExitTableName(c *TableNameContext)
+	// ExitColumns is called when exiting the columns production.
+	ExitColumns(c *ColumnsContext)
+
+	// ExitColumn is called when exiting the column production.
+	ExitColumn(c *ColumnContext)
+
+	// ExitTable is called when exiting the table production.
+	ExitTable(c *TableContext)
 
 	// ExitWhereClause is called when exiting the whereClause production.
 	ExitWhereClause(c *WhereClauseContext)
 
-	// ExitExpr is called when exiting the expr production.
-	ExitExpr(c *ExprContext)
+	// ExitPredicate is called when exiting the predicate production.
+	ExitPredicate(c *PredicateContext)
 
-	// ExitEvaluation is called when exiting the evaluation production.
-	ExitEvaluation(c *EvaluationContext)
+	// ExitComparison is called when exiting the comparison production.
+	ExitComparison(c *ComparisonContext)
 
-	// ExitKey is called when exiting the key production.
-	ExitKey(c *KeyContext)
+	// ExitLhs is called when exiting the lhs production.
+	ExitLhs(c *LhsContext)
 
-	// ExitValue is called when exiting the value production.
-	ExitValue(c *ValueContext)
+	// ExitRhs is called when exiting the rhs production.
+	ExitRhs(c *RhsContext)
 }

@@ -27,29 +27,41 @@ func (s *BaseSQLQueryListener) EnterQuery(ctx *QueryContext) {}
 // ExitQuery is called when production query is exited.
 func (s *BaseSQLQueryListener) ExitQuery(ctx *QueryContext) {}
 
-// EnterStatement is called when production statement is entered.
-func (s *BaseSQLQueryListener) EnterStatement(ctx *StatementContext) {}
+// EnterSelectStatement is called when production selectStatement is entered.
+func (s *BaseSQLQueryListener) EnterSelectStatement(ctx *SelectStatementContext) {}
 
-// ExitStatement is called when production statement is exited.
-func (s *BaseSQLQueryListener) ExitStatement(ctx *StatementContext) {}
+// ExitSelectStatement is called when production selectStatement is exited.
+func (s *BaseSQLQueryListener) ExitSelectStatement(ctx *SelectStatementContext) {}
 
-// EnterFieldList is called when production fieldList is entered.
-func (s *BaseSQLQueryListener) EnterFieldList(ctx *FieldListContext) {}
+// EnterSelectClause is called when production selectClause is entered.
+func (s *BaseSQLQueryListener) EnterSelectClause(ctx *SelectClauseContext) {}
 
-// ExitFieldList is called when production fieldList is exited.
-func (s *BaseSQLQueryListener) ExitFieldList(ctx *FieldListContext) {}
+// ExitSelectClause is called when production selectClause is exited.
+func (s *BaseSQLQueryListener) ExitSelectClause(ctx *SelectClauseContext) {}
 
-// EnterField is called when production field is entered.
-func (s *BaseSQLQueryListener) EnterField(ctx *FieldContext) {}
+// EnterFromClause is called when production fromClause is entered.
+func (s *BaseSQLQueryListener) EnterFromClause(ctx *FromClauseContext) {}
 
-// ExitField is called when production field is exited.
-func (s *BaseSQLQueryListener) ExitField(ctx *FieldContext) {}
+// ExitFromClause is called when production fromClause is exited.
+func (s *BaseSQLQueryListener) ExitFromClause(ctx *FromClauseContext) {}
 
-// EnterTableName is called when production tableName is entered.
-func (s *BaseSQLQueryListener) EnterTableName(ctx *TableNameContext) {}
+// EnterColumns is called when production columns is entered.
+func (s *BaseSQLQueryListener) EnterColumns(ctx *ColumnsContext) {}
 
-// ExitTableName is called when production tableName is exited.
-func (s *BaseSQLQueryListener) ExitTableName(ctx *TableNameContext) {}
+// ExitColumns is called when production columns is exited.
+func (s *BaseSQLQueryListener) ExitColumns(ctx *ColumnsContext) {}
+
+// EnterColumn is called when production column is entered.
+func (s *BaseSQLQueryListener) EnterColumn(ctx *ColumnContext) {}
+
+// ExitColumn is called when production column is exited.
+func (s *BaseSQLQueryListener) ExitColumn(ctx *ColumnContext) {}
+
+// EnterTable is called when production table is entered.
+func (s *BaseSQLQueryListener) EnterTable(ctx *TableContext) {}
+
+// ExitTable is called when production table is exited.
+func (s *BaseSQLQueryListener) ExitTable(ctx *TableContext) {}
 
 // EnterWhereClause is called when production whereClause is entered.
 func (s *BaseSQLQueryListener) EnterWhereClause(ctx *WhereClauseContext) {}
@@ -57,26 +69,26 @@ func (s *BaseSQLQueryListener) EnterWhereClause(ctx *WhereClauseContext) {}
 // ExitWhereClause is called when production whereClause is exited.
 func (s *BaseSQLQueryListener) ExitWhereClause(ctx *WhereClauseContext) {}
 
-// EnterExpr is called when production expr is entered.
-func (s *BaseSQLQueryListener) EnterExpr(ctx *ExprContext) {}
+// EnterPredicate is called when production predicate is entered.
+func (s *BaseSQLQueryListener) EnterPredicate(ctx *PredicateContext) {}
 
-// ExitExpr is called when production expr is exited.
-func (s *BaseSQLQueryListener) ExitExpr(ctx *ExprContext) {}
+// ExitPredicate is called when production predicate is exited.
+func (s *BaseSQLQueryListener) ExitPredicate(ctx *PredicateContext) {}
 
-// EnterEvaluation is called when production evaluation is entered.
-func (s *BaseSQLQueryListener) EnterEvaluation(ctx *EvaluationContext) {}
+// EnterComparison is called when production comparison is entered.
+func (s *BaseSQLQueryListener) EnterComparison(ctx *ComparisonContext) {}
 
-// ExitEvaluation is called when production evaluation is exited.
-func (s *BaseSQLQueryListener) ExitEvaluation(ctx *EvaluationContext) {}
+// ExitComparison is called when production comparison is exited.
+func (s *BaseSQLQueryListener) ExitComparison(ctx *ComparisonContext) {}
 
-// EnterKey is called when production key is entered.
-func (s *BaseSQLQueryListener) EnterKey(ctx *KeyContext) {}
+// EnterLhs is called when production lhs is entered.
+func (s *BaseSQLQueryListener) EnterLhs(ctx *LhsContext) {}
 
-// ExitKey is called when production key is exited.
-func (s *BaseSQLQueryListener) ExitKey(ctx *KeyContext) {}
+// ExitLhs is called when production lhs is exited.
+func (s *BaseSQLQueryListener) ExitLhs(ctx *LhsContext) {}
 
-// EnterValue is called when production value is entered.
-func (s *BaseSQLQueryListener) EnterValue(ctx *ValueContext) {}
+// EnterRhs is called when production rhs is entered.
+func (s *BaseSQLQueryListener) EnterRhs(ctx *RhsContext) {}
 
-// ExitValue is called when production value is exited.
-func (s *BaseSQLQueryListener) ExitValue(ctx *ValueContext) {}
+// ExitRhs is called when production rhs is exited.
+func (s *BaseSQLQueryListener) ExitRhs(ctx *RhsContext) {}

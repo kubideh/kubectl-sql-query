@@ -63,7 +63,7 @@ func TestParser(t *testing.T) {
 				Namespace: "fake-namespace",
 				Kind:      "pods",
 				Name:      "fake-name",
-				SelectionFields: map[string]string{
+				ComparisonPredicates: map[string]string{
 					"foo":     "bar",
 					"blargle": "flargle",
 				},
@@ -77,7 +77,7 @@ func TestParser(t *testing.T) {
 				Kind:      "deployments",
 				Namespace: "fake-namespace",
 				Name:      "fake-name",
-				SelectionFields: map[string]string{
+				ComparisonPredicates: map[string]string{
 					"foo":     "bar",
 					"blargle": "flargle",
 				},
@@ -91,11 +91,11 @@ func TestParser(t *testing.T) {
 				Kind:      "deployments",
 				Namespace: "fake-namespace",
 				Name:      "fake-name",
-				SelectionFields: map[string]string{
+				ComparisonPredicates: map[string]string{
 					"foo":     "bar",
 					"blargle": "flargle",
 				},
-				ProjectionFields: []string{
+				ProjectionColumns: []string{
 					"name",
 					"namespace",
 					"foo",
@@ -111,7 +111,7 @@ func TestParser(t *testing.T) {
 				Namespace: "fake-namespace",
 				Kind:      "pods",
 				Name:      "fake-name",
-				SelectionFields: map[string]string{
+				ComparisonPredicates: map[string]string{
 					"foo":     "bar",
 					"blargle": "flargle",
 				},

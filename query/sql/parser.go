@@ -36,45 +36,45 @@ var _ antlr.ErrorListener = &ErrorListenerImpl{}
 // a query against the Kubernetes API.
 type ListenerImpl struct {
 	parser.BaseSQLQueryListener
-	field            string
-	value            string
-	Kind             string
-	Namespace        string
-	Name             string
-	ProjectionFields []string
-	SelectionFields  map[string]string
+	field                string
+	value                string
+	Kind                 string
+	Namespace            string
+	Name                 string
+	ProjectionColumns    []string
+	ComparisonPredicates map[string]string
 }
 
-// ExitField is called when production field is exited.
-func (l *ListenerImpl) ExitField(ctx *parser.FieldContext) {
+// ExitColumn is called when production column is exited.
+func (l *ListenerImpl) ExitColumn(ctx *parser.ColumnContext) {
 	if ctx.GetText() == "*" {
 		return
 	}
 
-	l.ProjectionFields = append(l.ProjectionFields, ctx.GetText())
+	l.ProjectionColumns = append(l.ProjectionColumns, ctx.GetText())
 }
 
-// ExitKey is called when production key is exited.
-func (l *ListenerImpl) ExitKey(ctx *parser.KeyContext) {
+// ExitLhs is called when production lhs is exited.
+func (l *ListenerImpl) ExitLhs(ctx *parser.LhsContext) {
 	l.field = ctx.GetText()
 }
 
-// ExitTableName is called when production tableName is exited.
-func (l *ListenerImpl) ExitTableName(ctx *parser.TableNameContext) {
+// ExitTable is called when production table is exited.
+func (l *ListenerImpl) ExitTable(ctx *parser.TableContext) {
 	l.Kind = ctx.GetText()
 }
 
-// ExitValue is called when production value is exited.
-func (l *ListenerImpl) ExitValue(ctx *parser.ValueContext) {
+// ExitRhs is called when production rhs is exited.
+func (l *ListenerImpl) ExitRhs(ctx *parser.RhsContext) {
 	if l.field == "name" {
 		l.Name = ctx.GetText()
 	} else if l.field == "namespace" {
 		l.Namespace = ctx.GetText()
 	} else {
-		if l.SelectionFields == nil {
-			l.SelectionFields = make(map[string]string)
+		if l.ComparisonPredicates == nil {
+			l.ComparisonPredicates = make(map[string]string)
 		}
-		l.SelectionFields[l.field] = ctx.GetText()
+		l.ComparisonPredicates[l.field] = ctx.GetText()
 	}
 }
 
