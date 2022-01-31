@@ -47,10 +47,6 @@ type ListenerImpl struct {
 
 // ExitColumn is called when production column is exited.
 func (l *ListenerImpl) ExitColumn(ctx *parser.ColumnContext) {
-	if ctx.GetText() == "*" {
-		return
-	}
-
 	// Ignore duplicate columns.
 	if isDuplicateColumn(l.ProjectionColumns, ctx.GetText()) {
 		return

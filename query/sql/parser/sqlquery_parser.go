@@ -16,39 +16,42 @@ var _ = reflect.Copy
 var _ = strconv.Itoa
 
 var parserATN = []uint16{
-	3, 24715, 42794, 33075, 47597, 16764, 15335, 30598, 22884, 3, 11, 75, 4,
+	3, 24715, 42794, 33075, 47597, 16764, 15335, 30598, 22884, 3, 11, 78, 4,
 	2, 9, 2, 4, 3, 9, 3, 4, 4, 9, 4, 4, 5, 9, 5, 4, 6, 9, 6, 4, 7, 9, 7, 4,
 	8, 9, 8, 4, 9, 9, 9, 4, 10, 9, 10, 4, 11, 9, 11, 4, 12, 9, 12, 4, 13, 9,
 	13, 3, 2, 3, 2, 3, 2, 3, 3, 3, 3, 3, 3, 5, 3, 33, 10, 3, 3, 4, 3, 4, 3,
-	4, 3, 5, 3, 5, 3, 5, 3, 6, 3, 6, 3, 6, 7, 6, 44, 10, 6, 12, 6, 14, 6, 47,
-	11, 6, 3, 7, 3, 7, 3, 8, 3, 8, 3, 9, 3, 9, 3, 9, 3, 10, 3, 10, 3, 10, 3,
-	10, 3, 10, 3, 10, 7, 10, 62, 10, 10, 12, 10, 14, 10, 65, 11, 10, 3, 11,
-	3, 11, 3, 11, 3, 11, 3, 12, 3, 12, 3, 13, 3, 13, 3, 13, 2, 3, 18, 14, 2,
-	4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 2, 3, 4, 2, 4, 4, 10, 10, 2, 65,
-	2, 26, 3, 2, 2, 2, 4, 29, 3, 2, 2, 2, 6, 34, 3, 2, 2, 2, 8, 37, 3, 2, 2,
-	2, 10, 40, 3, 2, 2, 2, 12, 48, 3, 2, 2, 2, 14, 50, 3, 2, 2, 2, 16, 52,
-	3, 2, 2, 2, 18, 55, 3, 2, 2, 2, 20, 66, 3, 2, 2, 2, 22, 70, 3, 2, 2, 2,
-	24, 72, 3, 2, 2, 2, 26, 27, 5, 4, 3, 2, 27, 28, 7, 2, 2, 3, 28, 3, 3, 2,
-	2, 2, 29, 30, 5, 6, 4, 2, 30, 32, 5, 8, 5, 2, 31, 33, 5, 16, 9, 2, 32,
-	31, 3, 2, 2, 2, 32, 33, 3, 2, 2, 2, 33, 5, 3, 2, 2, 2, 34, 35, 7, 7, 2,
-	2, 35, 36, 5, 10, 6, 2, 36, 7, 3, 2, 2, 2, 37, 38, 7, 6, 2, 2, 38, 39,
-	5, 14, 8, 2, 39, 9, 3, 2, 2, 2, 40, 45, 5, 12, 7, 2, 41, 42, 7, 3, 2, 2,
-	42, 44, 5, 12, 7, 2, 43, 41, 3, 2, 2, 2, 44, 47, 3, 2, 2, 2, 45, 43, 3,
-	2, 2, 2, 45, 46, 3, 2, 2, 2, 46, 11, 3, 2, 2, 2, 47, 45, 3, 2, 2, 2, 48,
-	49, 9, 2, 2, 2, 49, 13, 3, 2, 2, 2, 50, 51, 7, 10, 2, 2, 51, 15, 3, 2,
-	2, 2, 52, 53, 7, 8, 2, 2, 53, 54, 5, 18, 10, 2, 54, 17, 3, 2, 2, 2, 55,
-	56, 8, 10, 1, 2, 56, 57, 5, 20, 11, 2, 57, 63, 3, 2, 2, 2, 58, 59, 12,
-	3, 2, 2, 59, 60, 7, 9, 2, 2, 60, 62, 5, 18, 10, 4, 61, 58, 3, 2, 2, 2,
-	62, 65, 3, 2, 2, 2, 63, 61, 3, 2, 2, 2, 63, 64, 3, 2, 2, 2, 64, 19, 3,
-	2, 2, 2, 65, 63, 3, 2, 2, 2, 66, 67, 5, 22, 12, 2, 67, 68, 7, 5, 2, 2,
-	68, 69, 5, 24, 13, 2, 69, 21, 3, 2, 2, 2, 70, 71, 7, 10, 2, 2, 71, 23,
-	3, 2, 2, 2, 72, 73, 7, 10, 2, 2, 73, 25, 3, 2, 2, 2, 5, 32, 45, 63,
+	4, 3, 5, 3, 5, 3, 5, 3, 6, 3, 6, 3, 6, 3, 6, 7, 6, 45, 10, 6, 12, 6, 14,
+	6, 48, 11, 6, 5, 6, 50, 10, 6, 3, 7, 3, 7, 3, 8, 3, 8, 3, 9, 3, 9, 3, 9,
+	3, 10, 3, 10, 3, 10, 3, 10, 3, 10, 3, 10, 7, 10, 65, 10, 10, 12, 10, 14,
+	10, 68, 11, 10, 3, 11, 3, 11, 3, 11, 3, 11, 3, 12, 3, 12, 3, 13, 3, 13,
+	3, 13, 2, 3, 18, 14, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 2, 2,
+	2, 69, 2, 26, 3, 2, 2, 2, 4, 29, 3, 2, 2, 2, 6, 34, 3, 2, 2, 2, 8, 37,
+	3, 2, 2, 2, 10, 49, 3, 2, 2, 2, 12, 51, 3, 2, 2, 2, 14, 53, 3, 2, 2, 2,
+	16, 55, 3, 2, 2, 2, 18, 58, 3, 2, 2, 2, 20, 69, 3, 2, 2, 2, 22, 73, 3,
+	2, 2, 2, 24, 75, 3, 2, 2, 2, 26, 27, 5, 4, 3, 2, 27, 28, 7, 2, 2, 3, 28,
+	3, 3, 2, 2, 2, 29, 30, 5, 6, 4, 2, 30, 32, 5, 8, 5, 2, 31, 33, 5, 16, 9,
+	2, 32, 31, 3, 2, 2, 2, 32, 33, 3, 2, 2, 2, 33, 5, 3, 2, 2, 2, 34, 35, 7,
+	7, 2, 2, 35, 36, 5, 10, 6, 2, 36, 7, 3, 2, 2, 2, 37, 38, 7, 6, 2, 2, 38,
+	39, 5, 14, 8, 2, 39, 9, 3, 2, 2, 2, 40, 50, 7, 4, 2, 2, 41, 46, 5, 12,
+	7, 2, 42, 43, 7, 3, 2, 2, 43, 45, 5, 12, 7, 2, 44, 42, 3, 2, 2, 2, 45,
+	48, 3, 2, 2, 2, 46, 44, 3, 2, 2, 2, 46, 47, 3, 2, 2, 2, 47, 50, 3, 2, 2,
+	2, 48, 46, 3, 2, 2, 2, 49, 40, 3, 2, 2, 2, 49, 41, 3, 2, 2, 2, 50, 11,
+	3, 2, 2, 2, 51, 52, 7, 10, 2, 2, 52, 13, 3, 2, 2, 2, 53, 54, 7, 10, 2,
+	2, 54, 15, 3, 2, 2, 2, 55, 56, 7, 8, 2, 2, 56, 57, 5, 18, 10, 2, 57, 17,
+	3, 2, 2, 2, 58, 59, 8, 10, 1, 2, 59, 60, 5, 20, 11, 2, 60, 66, 3, 2, 2,
+	2, 61, 62, 12, 3, 2, 2, 62, 63, 7, 9, 2, 2, 63, 65, 5, 18, 10, 4, 64, 61,
+	3, 2, 2, 2, 65, 68, 3, 2, 2, 2, 66, 64, 3, 2, 2, 2, 66, 67, 3, 2, 2, 2,
+	67, 19, 3, 2, 2, 2, 68, 66, 3, 2, 2, 2, 69, 70, 5, 22, 12, 2, 70, 71, 7,
+	5, 2, 2, 71, 72, 5, 24, 13, 2, 72, 21, 3, 2, 2, 2, 73, 74, 7, 10, 2, 2,
+	74, 23, 3, 2, 2, 2, 75, 76, 7, 10, 2, 2, 76, 25, 3, 2, 2, 2, 6, 32, 46,
+	49, 66,
 }
 var literalNames = []string{
 	"", "','", "'*'", "'='",
 }
 var symbolicNames = []string{
-	"", "", "ALL", "EQ", "FROM", "SELECT", "WHERE", "AND", "IDENTIFIER", "WHITESPACE",
+	"", "", "ALL_COLUMNS", "EQ", "FROM", "SELECT", "WHERE", "AND", "IDENTIFIER",
+	"WHITESPACE",
 }
 
 var ruleNames = []string{
@@ -87,16 +90,16 @@ func NewSQLQueryParser(input antlr.TokenStream) *SQLQueryParser {
 
 // SQLQueryParser tokens.
 const (
-	SQLQueryParserEOF        = antlr.TokenEOF
-	SQLQueryParserT__0       = 1
-	SQLQueryParserALL        = 2
-	SQLQueryParserEQ         = 3
-	SQLQueryParserFROM       = 4
-	SQLQueryParserSELECT     = 5
-	SQLQueryParserWHERE      = 6
-	SQLQueryParserAND        = 7
-	SQLQueryParserIDENTIFIER = 8
-	SQLQueryParserWHITESPACE = 9
+	SQLQueryParserEOF         = antlr.TokenEOF
+	SQLQueryParserT__0        = 1
+	SQLQueryParserALL_COLUMNS = 2
+	SQLQueryParserEQ          = 3
+	SQLQueryParserFROM        = 4
+	SQLQueryParserSELECT      = 5
+	SQLQueryParserWHERE       = 6
+	SQLQueryParserAND         = 7
+	SQLQueryParserIDENTIFIER  = 8
+	SQLQueryParserWHITESPACE  = 9
 )
 
 // SQLQueryParser rules.
@@ -613,6 +616,10 @@ func NewColumnsContext(parser antlr.Parser, parent antlr.ParserRuleContext, invo
 
 func (s *ColumnsContext) GetParser() antlr.Parser { return s.parser }
 
+func (s *ColumnsContext) ALL_COLUMNS() antlr.TerminalNode {
+	return s.GetToken(SQLQueryParserALL_COLUMNS, 0)
+}
+
 func (s *ColumnsContext) AllColumn() []IColumnContext {
 	var ts = s.GetTypedRuleContexts(reflect.TypeOf((*IColumnContext)(nil)).Elem())
 	var tst = make([]IColumnContext, len(ts))
@@ -680,28 +687,44 @@ func (p *SQLQueryParser) Columns() (localctx IColumnsContext) {
 		}
 	}()
 
-	p.EnterOuterAlt(localctx, 1)
-	{
-		p.SetState(38)
-		p.Column()
-	}
-	p.SetState(43)
+	p.SetState(47)
 	p.GetErrorHandler().Sync(p)
-	_la = p.GetTokenStream().LA(1)
 
-	for _la == SQLQueryParserT__0 {
+	switch p.GetTokenStream().LA(1) {
+	case SQLQueryParserALL_COLUMNS:
+		p.EnterOuterAlt(localctx, 1)
+		{
+			p.SetState(38)
+			p.Match(SQLQueryParserALL_COLUMNS)
+		}
+
+	case SQLQueryParserIDENTIFIER:
+		p.EnterOuterAlt(localctx, 2)
 		{
 			p.SetState(39)
-			p.Match(SQLQueryParserT__0)
-		}
-		{
-			p.SetState(40)
 			p.Column()
 		}
-
-		p.SetState(45)
+		p.SetState(44)
 		p.GetErrorHandler().Sync(p)
 		_la = p.GetTokenStream().LA(1)
+
+		for _la == SQLQueryParserT__0 {
+			{
+				p.SetState(40)
+				p.Match(SQLQueryParserT__0)
+			}
+			{
+				p.SetState(41)
+				p.Column()
+			}
+
+			p.SetState(46)
+			p.GetErrorHandler().Sync(p)
+			_la = p.GetTokenStream().LA(1)
+		}
+
+	default:
+		panic(antlr.NewNoViableAltException(p, nil, nil, nil, nil, nil))
 	}
 
 	return localctx
@@ -745,10 +768,6 @@ func NewColumnContext(parser antlr.Parser, parent antlr.ParserRuleContext, invok
 
 func (s *ColumnContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *ColumnContext) ALL() antlr.TerminalNode {
-	return s.GetToken(SQLQueryParserALL, 0)
-}
-
 func (s *ColumnContext) IDENTIFIER() antlr.TerminalNode {
 	return s.GetToken(SQLQueryParserIDENTIFIER, 0)
 }
@@ -779,7 +798,6 @@ func (p *SQLQueryParser) Column() (localctx IColumnContext) {
 
 	localctx = NewColumnContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 10, SQLQueryParserRULE_column)
-	var _la int
 
 	defer func() {
 		p.ExitRule()
@@ -799,15 +817,8 @@ func (p *SQLQueryParser) Column() (localctx IColumnContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(46)
-		_la = p.GetTokenStream().LA(1)
-
-		if !(_la == SQLQueryParserALL || _la == SQLQueryParserIDENTIFIER) {
-			p.GetErrorHandler().RecoverInline(p)
-		} else {
-			p.GetErrorHandler().ReportMatch(p)
-			p.Consume()
-		}
+		p.SetState(49)
+		p.Match(SQLQueryParserIDENTIFIER)
 	}
 
 	return localctx
@@ -900,7 +911,7 @@ func (p *SQLQueryParser) Table() (localctx ITableContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(48)
+		p.SetState(51)
 		p.Match(SQLQueryParserIDENTIFIER)
 	}
 
@@ -1004,11 +1015,11 @@ func (p *SQLQueryParser) WhereClause() (localctx IWhereClauseContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(50)
+		p.SetState(53)
 		p.Match(SQLQueryParserWHERE)
 	}
 	{
-		p.SetState(51)
+		p.SetState(54)
 		p.predicate(0)
 	}
 
@@ -1146,14 +1157,14 @@ func (p *SQLQueryParser) predicate(_p int) (localctx IPredicateContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(54)
+		p.SetState(57)
 		p.Comparison()
 	}
 
 	p.GetParserRuleContext().SetStop(p.GetTokenStream().LT(-1))
-	p.SetState(61)
+	p.SetState(64)
 	p.GetErrorHandler().Sync(p)
-	_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 2, p.GetParserRuleContext())
+	_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 3, p.GetParserRuleContext())
 
 	for _alt != 2 && _alt != antlr.ATNInvalidAltNumber {
 		if _alt == 1 {
@@ -1163,24 +1174,24 @@ func (p *SQLQueryParser) predicate(_p int) (localctx IPredicateContext) {
 			_prevctx = localctx
 			localctx = NewPredicateContext(p, _parentctx, _parentState)
 			p.PushNewRecursionContext(localctx, _startState, SQLQueryParserRULE_predicate)
-			p.SetState(56)
+			p.SetState(59)
 
 			if !(p.Precpred(p.GetParserRuleContext(), 1)) {
 				panic(antlr.NewFailedPredicateException(p, "p.Precpred(p.GetParserRuleContext(), 1)", ""))
 			}
 			{
-				p.SetState(57)
+				p.SetState(60)
 				p.Match(SQLQueryParserAND)
 			}
 			{
-				p.SetState(58)
+				p.SetState(61)
 				p.predicate(2)
 			}
 
 		}
-		p.SetState(63)
+		p.SetState(66)
 		p.GetErrorHandler().Sync(p)
-		_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 2, p.GetParserRuleContext())
+		_alt = p.GetInterpreter().AdaptivePredict(p.GetTokenStream(), 3, p.GetParserRuleContext())
 	}
 
 	return localctx
@@ -1293,15 +1304,15 @@ func (p *SQLQueryParser) Comparison() (localctx IComparisonContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(64)
+		p.SetState(67)
 		p.Lhs()
 	}
 	{
-		p.SetState(65)
+		p.SetState(68)
 		p.Match(SQLQueryParserEQ)
 	}
 	{
-		p.SetState(66)
+		p.SetState(69)
 		p.Rhs()
 	}
 
@@ -1395,7 +1406,7 @@ func (p *SQLQueryParser) Lhs() (localctx ILhsContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(68)
+		p.SetState(71)
 		p.Match(SQLQueryParserIDENTIFIER)
 	}
 
@@ -1489,7 +1500,7 @@ func (p *SQLQueryParser) Rhs() (localctx IRhsContext) {
 
 	p.EnterOuterAlt(localctx, 1)
 	{
-		p.SetState(70)
+		p.SetState(73)
 		p.Match(SQLQueryParserIDENTIFIER)
 	}
 

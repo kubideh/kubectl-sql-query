@@ -101,13 +101,14 @@ var lexerLiteralNames = []string{
 }
 
 var lexerSymbolicNames = []string{
-	"", "", "ALL", "EQ", "FROM", "SELECT", "WHERE", "AND", "IDENTIFIER", "WHITESPACE",
+	"", "", "ALL_COLUMNS", "EQ", "FROM", "SELECT", "WHERE", "AND", "IDENTIFIER",
+	"WHITESPACE",
 }
 
 var lexerRuleNames = []string{
-	"T__0", "ALL", "EQ", "FROM", "SELECT", "WHERE", "AND", "IDENTIFIER", "WHITESPACE",
-	"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O",
-	"P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
+	"T__0", "ALL_COLUMNS", "EQ", "FROM", "SELECT", "WHERE", "AND", "IDENTIFIER",
+	"WHITESPACE", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L",
+	"M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
 }
 
 type SQLQueryLexer struct {
@@ -147,13 +148,13 @@ func NewSQLQueryLexer(input antlr.CharStream) *SQLQueryLexer {
 
 // SQLQueryLexer tokens.
 const (
-	SQLQueryLexerT__0       = 1
-	SQLQueryLexerALL        = 2
-	SQLQueryLexerEQ         = 3
-	SQLQueryLexerFROM       = 4
-	SQLQueryLexerSELECT     = 5
-	SQLQueryLexerWHERE      = 6
-	SQLQueryLexerAND        = 7
-	SQLQueryLexerIDENTIFIER = 8
-	SQLQueryLexerWHITESPACE = 9
+	SQLQueryLexerT__0        = 1
+	SQLQueryLexerALL_COLUMNS = 2
+	SQLQueryLexerEQ          = 3
+	SQLQueryLexerFROM        = 4
+	SQLQueryLexerSELECT      = 5
+	SQLQueryLexerWHERE       = 6
+	SQLQueryLexerAND         = 7
+	SQLQueryLexerIDENTIFIER  = 8
+	SQLQueryLexerWHITESPACE  = 9
 )

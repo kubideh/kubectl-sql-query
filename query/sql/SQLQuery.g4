@@ -10,9 +10,9 @@ selectClause: SELECT columns ;
 
 fromClause: FROM table ;
 
-columns: column (',' column)* ;
+columns: ALL_COLUMNS | column (',' column)* ;
 
-column: ALL | IDENTIFIER ;
+column: IDENTIFIER ;
 
 table: IDENTIFIER ;
 
@@ -27,14 +27,14 @@ lhs: IDENTIFIER ;
 rhs: IDENTIFIER ;
 
 // Tokens
-ALL:        '*' ;
-EQ:         '=' ;
-FROM:       F R O M ;
-SELECT:     S E L E C T ;
-WHERE:      W H E R E ;
-AND:        A N D ;
-IDENTIFIER: [a-zA-Z0-9] [a-zA-Z0-9-.]* ;
-WHITESPACE: [ \u000B\t\r\n]+ -> skip ;
+ALL_COLUMNS:    '*' ;
+EQ:             '=' ;
+FROM:           F R O M ;
+SELECT:         S E L E C T ;
+WHERE:          W H E R E ;
+AND:            A N D ;
+IDENTIFIER:     [a-zA-Z0-9] [a-zA-Z0-9-.]* ;
+WHITESPACE:     [ \u000B\t\r\n]+ -> skip ;
 
 fragment A: [aA];
 fragment B: [bB];

@@ -13,7 +13,7 @@ null
 token symbolic names:
 null
 null
-ALL
+ALL_COLUMNS
 EQ
 FROM
 SELECT
@@ -24,7 +24,7 @@ WHITESPACE
 
 rule names:
 T__0
-ALL
+ALL_COLUMNS
 EQ
 FROM
 SELECT
