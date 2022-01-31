@@ -85,7 +85,27 @@ func TestParser(t *testing.T) {
 		},
 		{
 			// Project multiple fields
-			query:              "SELECT name, namespace, foo, bar FROM deployments WHERE name=fake-name AND namespace=fake-namespace AND foo=bar AND blargle=flargle",
+			query:              "SELECT name,namespace, foo,bar FROM deployments WHERE name=fake-name AND namespace=fake-namespace AND foo=bar AND blargle=flargle",
+			expectedErrorCount: 0,
+			expectedListener: ListenerImpl{
+				Kind:      "deployments",
+				Namespace: "fake-namespace",
+				Name:      "fake-name",
+				ComparisonPredicates: map[string]string{
+					"foo":     "bar",
+					"blargle": "flargle",
+				},
+				ProjectionColumns: []string{
+					"name",
+					"namespace",
+					"foo",
+					"bar",
+				},
+			},
+		},
+		{
+			// Project multiple duplicate fields
+			query:              "SELECT name,namespace,name, foo,name,bar FROM deployments WHERE name=fake-name AND namespace=fake-namespace AND foo=bar AND blargle=flargle",
 			expectedErrorCount: 0,
 			expectedListener: ListenerImpl{
 				Kind:      "deployments",
