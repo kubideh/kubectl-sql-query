@@ -19,3 +19,5 @@
 
 # Krew folder
 .krew/
+
+dist/
