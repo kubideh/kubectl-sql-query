@@ -189,6 +189,15 @@ func TestQueryFunction(t *testing.T) {
 			printExpectedOutput: nilOutputFunc,
 			expectedError:       "No resources found in blargle namespace.\n",
 		},
+
+		// TODO(evan) Verify multiple results print cleanly
+
+		// TODO(evan) Project columns
+
+		// TODO(evan) Allow excluding the projection of missing columns
+
+		// TODO(evan) Allow comparison using predicates
+
 	}
 
 	for _, c := range cases {

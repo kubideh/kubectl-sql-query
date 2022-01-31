@@ -138,6 +138,26 @@ func TestParser(t *testing.T) {
 			},
 		},
 
+		// TODO(evan) Change RHS to be a quoted string, boolean, or numeric value
+
+		// TODO(evan) Allow comparison operators: <>, !=, >, <, >=, <=
+
+		// TODO(evan) Allow inclusive range operator: [NOT] BETWEEN [SYMMETRIC]
+
+		// TODO(evan) Allow begins with character pattern operator: [NOT] LIKE [ESCAPE] (e.g., namespace LIKE 'kube-%')
+
+		// TODO(evan) Allow contains a character pattern operator: [NOT] LIKE [ESCAPE] (e.g., namespace LIKE '%system%')
+
+		// TODO(evan) Allow equality to one of multiple possible values: [NOT] IN (e.g., namespace IN ('kube-system', 'default'))
+
+		// TODO(evan) Allow comparison to null (i.e., missing data): IS [NOT] NULL
+
+		// TODO(evan) Allow boolean truth value test: IS [NOT] TRUE or IS [NOT] FALSE (also, allow TRUE or FALSE to be mixed-case)
+
+		// TODO(evan) Allow is equal to value or both are nulls (i.e., missing data): IS NOT DISTINCT FROM
+
+		// TODO(evan) Allow changing a column name during projection: AS
+
 		// TODO(evan) Allow (INNER) JOIN
 
 		// TODO(evan) Allow LEFT (OUTER) JOIN
