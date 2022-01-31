@@ -146,9 +146,11 @@ func TestParser(t *testing.T) {
 
 		// TODO(evan) Allow begins with character pattern operator: [NOT] LIKE [ESCAPE] (e.g., namespace LIKE 'kube-%')
 
-		// TODO(evan) Allow contains a character pattern operator: [NOT] LIKE [ESCAPE] (e.g., namespace LIKE '%system%')
+		// TODO(evan) Allow contains a character pattern operator: [NOT] LIKE [ESCAPE] (e.g., namespace LIKE '%system_%')
 
 		// TODO(evan) Allow equality to one of multiple possible values: [NOT] IN (e.g., namespace IN ('kube-system', 'default'))
+
+		// TODO(evan) Allow ANY and ALL operators
 
 		// TODO(evan) Allow comparison to null (i.e., missing data): IS [NOT] NULL
 
@@ -156,15 +158,39 @@ func TestParser(t *testing.T) {
 
 		// TODO(evan) Allow is equal to value or both are nulls (i.e., missing data): IS NOT DISTINCT FROM
 
-		// TODO(evan) Allow changing a column name during projection: AS
+		// TODO(evan) Allow changing a column name during projection: AS (i.e., alias)
 
-		// TODO(evan) Allow (INNER) JOIN
+		// TODO(evan) Allow EXISTS operator
+
+		// TODO(evan) Allow predicates to use use boolean algebra: AND, OR, or NOT operators between predicates
+
+		// TODO(evan) Allow predicates to be parenthetical
+
+		// TODO(evan) Allow DISTINCT qualifier to projection columns
+
+		// TODO(evan) Allow CASE as a column-builder
+
+		// TODO(evan) Allow ORDER BY clause
+
+		// TODO(evan) Allow CASE as an ORDER BY clause
+
+		// TODO(evan) Allow FETCH FIRST n ROWS ONLY clause
+
+		// TODO(evan) Allow table aliases
+
+		// TODO(evan) Allow JOIN
+
+		// TODO(evan) Allow INNER JOIN
 
 		// TODO(evan) Allow LEFT (OUTER) JOIN
 
 		// TODO(evan) Allow RIGHT (OUTER) JOIN
 
 		// TODO(evan) Allow FULL (OUTER) JOIN
+
+		// TODO(evan) Allow self join
+
+		// TODO(evan) Allow UNION [ALL]
 
 	}
 

@@ -10,3 +10,12 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 A true SQL-query enhancement for kubectl
+
+## References
+
+Most standard SQL will be supported. A list of links to the
+sites that were referenced when building the SQL query grammar now
+follows.
+
+- [SQL Syntax](https://en.wikipedia.org/wiki/SQL_syntax)
+- [SQL Tutorial](https://www.w3schools.com/sql/default.asp)
