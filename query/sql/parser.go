@@ -62,19 +62,16 @@ func (l *ListenerImpl) ExitTable(ctx *parser.TableContext) {
 
 // ExitRhs is called when production rhs is exited.
 func (l *ListenerImpl) ExitRhs(ctx *parser.RhsContext) {
-	if l.field == "name" {
+	switch l.field {
+	case "name":
 		l.Name = ctx.GetText()
-	}
-
-	if l.field == "namespace" {
+	case "namespace":
 		l.Namespace = ctx.GetText()
-	}
-
-	if l.field != "name" && l.field != "namespace" {
+	default:
 		if l.ComparisonPredicates == nil {
 			l.ComparisonPredicates = make(map[string]string)
 		}
-		l.ComparisonPredicates[l.field] = ctx.GetText()
+		l.ComparisonPredicates[l.field] = ctx.GetText() // TODO(evan) Get rid of the set.
 	}
 }
 
