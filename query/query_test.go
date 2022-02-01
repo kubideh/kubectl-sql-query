@@ -1,9 +1,7 @@
 package query
 
 import (
-	"bytes"
 	"context"
-	"io"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,14 +14,13 @@ import (
 
 func TestQueryFunction(t *testing.T) {
 	var nilFakeFunc = func(fakeClientSet *fake.Clientset) {}
-	var nilOutputFunc = func(w io.Writer) {}
 
 	cases := []struct {
-		setupFakes          func(fakeClientSet *fake.Clientset)
-		defaultNamespace    string
-		sqlQuery            string
-		printExpectedOutput func(w io.Writer)
-		expectedError       string
+		setupFakes       func(fakeClientSet *fake.Clientset)
+		defaultNamespace string
+		sqlQuery         string
+		expectedOutput   string
+		expectedError    string
 	}{
 		// Select pod by name and namespace
 		{
@@ -49,49 +46,34 @@ func TestQueryFunction(t *testing.T) {
 			},
 			defaultNamespace: "",
 			sqlQuery:         "SELECT * FROM pods WHERE name=kube-apiserver-kind-control-plane AND namespace=kube-system",
-			printExpectedOutput: func(w io.Writer) {
-				printer := CreatePodPrinter()
-				err := printer.PrintObj(
-					&v1.Pod{
-						TypeMeta: metav1.TypeMeta{
-							Kind:       "pods",
-							APIVersion: "v1",
-						},
-						ObjectMeta: metav1.ObjectMeta{
-							Namespace: "kube-system",
-							Name:      "kube-apiserver-kind-control-plane",
-						},
-					}, w)
-
-				if err != nil {
-					panic(err.Error())
-				}
-			},
+			expectedOutput: `NAMESPACE     NAME                                AGE
+kube-system   kube-apiserver-kind-control-plane   <unknown>
+`,
 			expectedError: "",
 		},
 		// Select all pods in a particular namespace
 		{
-			setupFakes:          nilFakeFunc,
-			defaultNamespace:    "",
-			sqlQuery:            "SELECT * FROM pods WHERE namespace=blargle",
-			printExpectedOutput: nilOutputFunc,
-			expectedError:       "No resources found in blargle namespace.\n",
+			setupFakes:       nilFakeFunc,
+			defaultNamespace: "",
+			sqlQuery:         "SELECT * FROM pods WHERE namespace=blargle",
+			expectedOutput:   "NAMESPACE   NAME   AGE\n",
+			expectedError:    "",
 		},
 		// Select all pods using default namespace
 		{
-			setupFakes:          nilFakeFunc,
-			defaultNamespace:    "blargle",
-			sqlQuery:            "SELECT * FROM pods",
-			printExpectedOutput: nilOutputFunc,
-			expectedError:       "No resources found in blargle namespace.\n",
+			setupFakes:       nilFakeFunc,
+			defaultNamespace: "blargle",
+			sqlQuery:         "SELECT * FROM pods",
+			expectedOutput:   "NAMESPACE   NAME   AGE\n",
+			expectedError:    "",
 		},
 		// Select a non-existent pod
 		{
-			setupFakes:          nilFakeFunc,
-			defaultNamespace:    "blargle",
-			sqlQuery:            "SELECT * FROM pods WHERE name=missing-pod",
-			printExpectedOutput: nilOutputFunc,
-			expectedError:       "No resources found in blargle namespace.\n",
+			setupFakes:       nilFakeFunc,
+			defaultNamespace: "blargle",
+			sqlQuery:         "SELECT * FROM pods WHERE name=missing-pod",
+			expectedOutput:   "NAMESPACE   NAME   AGE\n",
+			expectedError:    "",
 		},
 		// Select all deployments using default namespace
 		{
@@ -117,24 +99,9 @@ func TestQueryFunction(t *testing.T) {
 			},
 			defaultNamespace: "blargle",
 			sqlQuery:         "SELECT * FROM deployments",
-			printExpectedOutput: func(w io.Writer) {
-				printer := CreateDeploymentPrinter()
-				err := printer.PrintObj(
-					&appsv1.Deployment{
-						TypeMeta: metav1.TypeMeta{
-							Kind:       "deployments",
-							APIVersion: "apps/v1",
-						},
-						ObjectMeta: metav1.ObjectMeta{
-							Namespace: "blargle",
-							Name:      "fake-deployment",
-						},
-					}, w)
-
-				if err != nil {
-					panic(err.Error())
-				}
-			},
+			expectedOutput: `NAMESPACE   NAME              AGE
+blargle     fake-deployment   <unknown>
+`,
 			expectedError: "",
 		},
 		// Select a particular deployment
@@ -161,40 +128,25 @@ func TestQueryFunction(t *testing.T) {
 			},
 			defaultNamespace: "blargle",
 			sqlQuery:         "SELECT * FROM deployments WHERE name=fake-deployment",
-			printExpectedOutput: func(w io.Writer) {
-				printer := CreateDeploymentPrinter()
-				err := printer.PrintObj(
-					&appsv1.Deployment{
-						TypeMeta: metav1.TypeMeta{
-							Kind:       "deployments",
-							APIVersion: "apps/v1",
-						},
-						ObjectMeta: metav1.ObjectMeta{
-							Namespace: "blargle",
-							Name:      "fake-deployment",
-						},
-					}, w)
-
-				if err != nil {
-					panic(err.Error())
-				}
-			},
+			expectedOutput: `NAMESPACE   NAME              AGE
+blargle     fake-deployment   <unknown>
+`,
 			expectedError: "",
 		},
 		// Select a non-existent deployment
 		{
-			setupFakes:          nilFakeFunc,
-			defaultNamespace:    "blargle",
-			sqlQuery:            "SELECT * FROM deployments WHERE name=missing-deployment",
-			printExpectedOutput: nilOutputFunc,
-			expectedError:       "No resources found in blargle namespace.\n",
+			setupFakes:       nilFakeFunc,
+			defaultNamespace: "blargle",
+			sqlQuery:         "SELECT * FROM deployments WHERE name=missing-deployment",
+			expectedOutput:   "NAMESPACE   NAME   AGE\n",
+			expectedError:    "",
 		},
 
 		// TODO(evan) Verify multiple results print cleanly
 
 		// TODO(evan) Project columns
 
-		// TODO(evan) Allow excluding the projection of missing columns
+		// TODO(evan) Allow the projection of missing columns
 
 		// TODO(evan) Allow comparison using predicates
 
@@ -210,10 +162,7 @@ func TestQueryFunction(t *testing.T) {
 			queryCmd := Create(streams, fakeClientSet, c.defaultNamespace)
 			queryCmd.Run(c.sqlQuery)
 
-			expectedOutBuf := new(bytes.Buffer)
-			c.printExpectedOutput(expectedOutBuf)
-
-			assert.Equal(t, expectedOutBuf.String(), outBuf.String())
+			assert.Equal(t, c.expectedOutput, outBuf.String())
 			assert.Equal(t, c.expectedError, errBuf.String())
 		})
 	}

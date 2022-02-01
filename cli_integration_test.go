@@ -63,7 +63,7 @@ func TestCommandWithQueryString(t *testing.T) {
 		t.Run(strings.Join(c, " "), func(t *testing.T) {
 			out, err := exec.Command(c[0], c[1:]...).CombinedOutput()
 
-			const expectedOutput = "No resources found in default namespace.\n"
+			const expectedOutput = "NAMESPACE   NAME   AGE\n"
 
 			assert.NoErrorf(t, err, "Failed to run %s", c)
 			assert.Equal(t, expectedOutput, string(out), "Unexpected output")

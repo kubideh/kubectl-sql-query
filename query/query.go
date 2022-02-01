@@ -4,7 +4,9 @@ import (
 	"github.com/antlr/antlr4/runtime/Go/antlr"
 	"github.com/kubideh/kubectl-sql-query/finders"
 	"github.com/kubideh/kubectl-sql-query/query/sql"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/cli-runtime/pkg/printers"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -30,8 +32,17 @@ func (q *Query) Run(sqlQuery string) {
 	finder := finders.Create(q.clientSet, listener.Kind)
 	results := finder.Find(namespaceFrom(&listener, q.defaultNamespace), listener.Name)
 
-	printer := CreatePrinter(q.streams, listener.Kind)
-	printer.Print(namespaceFrom(&listener, q.defaultNamespace), results)
+	q.print(results)
+}
+
+func (q *Query) print(results runtime.Object) {
+	printer := printers.NewTablePrinter(printers.PrintOptions{
+		WithNamespace: true,
+	})
+
+	if err := printer.PrintObj(results, q.streams.Out); err != nil {
+		panic(err.Error())
+	}
 }
 
 // Create returns a new Query object.
