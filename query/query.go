@@ -21,18 +21,26 @@ type Query struct {
 func (q *Query) Run(sqlQuery string) {
 	var errorListener sql.ErrorListenerImpl
 	var listener sql.ListenerImpl
-	p := sql.Create(&errorListener, sqlQuery)
 
-	antlr.ParseTreeWalkerDefault.Walk(&listener, p.Query())
+	q.parseQuery(&errorListener, &listener, sqlQuery)
 
 	if errorListener.Count > 0 {
 		panic("Found errors in input")
 	}
 
-	finder := finders.Create(q.clientSet, listener.Kind)
-	results := finder.Find(namespaceFrom(&listener, q.defaultNamespace), listener.Name)
+	results := q.find(&listener)
 
 	q.print(results)
+}
+
+func (q *Query) parseQuery(errorListener *sql.ErrorListenerImpl, listener *sql.ListenerImpl, sqlQuery string) {
+	p := sql.Create(errorListener, sqlQuery)
+	antlr.ParseTreeWalkerDefault.Walk(listener, p.Query())
+}
+
+func (q *Query) find(listener *sql.ListenerImpl) runtime.Object {
+	finder := finders.Create(q.clientSet, listener.Kind)
+	return finder.Find(namespaceFrom(listener, q.defaultNamespace), listener.Name)
 }
 
 func (q *Query) print(results runtime.Object) {

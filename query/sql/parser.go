@@ -64,9 +64,13 @@ func (l *ListenerImpl) ExitTable(ctx *parser.TableContext) {
 func (l *ListenerImpl) ExitRhs(ctx *parser.RhsContext) {
 	if l.field == "name" {
 		l.Name = ctx.GetText()
-	} else if l.field == "namespace" {
+	}
+
+	if l.field == "namespace" {
 		l.Namespace = ctx.GetText()
-	} else {
+	}
+
+	if l.field != "name" && l.field != "namespace" {
 		if l.ComparisonPredicates == nil {
 			l.ComparisonPredicates = make(map[string]string)
 		}
