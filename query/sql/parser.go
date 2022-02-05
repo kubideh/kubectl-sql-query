@@ -38,9 +38,7 @@ type ListenerImpl struct {
 	parser.BaseSQLQueryListener
 	field                string
 	value                string
-	Kind                 string
-	Namespace            string
-	Name                 string
+	TableName            string
 	ProjectionColumns    []string
 	ComparisonPredicates map[string]string
 }
@@ -57,22 +55,16 @@ func (l *ListenerImpl) ExitLhs(ctx *parser.LhsContext) {
 
 // ExitTable is called when production table is exited.
 func (l *ListenerImpl) ExitTable(ctx *parser.TableContext) {
-	l.Kind = ctx.GetText()
+	l.TableName = ctx.GetText()
 }
 
 // ExitRhs is called when production rhs is exited.
 func (l *ListenerImpl) ExitRhs(ctx *parser.RhsContext) {
-	switch l.field {
-	case "name":
-		l.Name = ctx.GetText()
-	case "namespace":
-		l.Namespace = ctx.GetText()
-	default:
-		if l.ComparisonPredicates == nil {
-			l.ComparisonPredicates = make(map[string]string)
-		}
-		l.ComparisonPredicates[l.field] = ctx.GetText() // TODO(evan) Get rid of the set.
+	if l.ComparisonPredicates == nil {
+		l.ComparisonPredicates = make(map[string]string)
 	}
+
+	l.ComparisonPredicates[l.field] = ctx.GetText()
 }
 
 var _ parser.SQLQueryListener = &ListenerImpl{}

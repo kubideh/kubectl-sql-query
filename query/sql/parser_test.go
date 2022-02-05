@@ -9,135 +9,118 @@ import (
 
 func TestParser(t *testing.T) {
 	cases := []struct {
+		name               string
 		query              string
 		expectedErrorCount int
 		expectedListener   ListenerImpl
 	}{
 		{
-			// Empty queries are not allowed
+			name:               "Queries must not be empty",
 			query:              "",
 			expectedErrorCount: 1,
-			expectedListener:   ListenerImpl{},
 		},
 		{
-			// Selection is optional
-			query:              "SELECT * FROM pods",
-			expectedErrorCount: 0,
+			name:  "SELECT all fields from the table and WHERE clause is optional",
+			query: "SELECT * FROM pods",
 			expectedListener: ListenerImpl{
-				Kind: "pods",
+				TableName: "pods",
 			},
 		},
 		{
-			// Selection by namespace TODO(evan) ensure valid K8s namespace format
-			query:              "SELECT * FROM pods WHERE namespace=default",
-			expectedErrorCount: 0,
+			name:  "SELECT clause is not case-sensitive",
+			query: "Select * From pods",
 			expectedListener: ListenerImpl{
-				Kind:      "pods",
-				Namespace: "default",
+				TableName: "pods",
 			},
 		},
 		{
-			// Selection by valid K8s object name
-			query:              "SELECT * FROM pods WHERE name=blargle1-flargle2.example.com",
-			expectedErrorCount: 0,
-			expectedListener: ListenerImpl{
-				Kind: "pods",
-				Name: "blargle1-flargle2.example.com",
-			},
+			name:               "WHERE clause must have at least one condition",
+			query:              "SELECT * From pods WHERE",
+			expectedErrorCount: 1,
 		},
 		{
-			// Selection by valid K8s object name and namespace
-			query:              "SELECT * FROM pods WHERE name=blargle AND namespace=flargle",
-			expectedErrorCount: 0,
+			name:  "WHERE clause can have just one condition",
+			query: "SELECT * FROM pods WHERE namespace=default",
 			expectedListener: ListenerImpl{
-				Kind:      "pods",
-				Namespace: "flargle",
-				Name:      "blargle",
-			},
-		},
-		{
-			// Selection by arbitrary fields
-			query:              "SELECT * FROM pods WHERE name=fake-name AND namespace=fake-namespace AND foo=bar AND blargle=flargle",
-			expectedErrorCount: 0,
-			expectedListener: ListenerImpl{
-				Namespace: "fake-namespace",
-				Kind:      "pods",
-				Name:      "fake-name",
+				TableName: "pods",
 				ComparisonPredicates: map[string]string{
-					"foo":     "bar",
-					"blargle": "flargle",
+					"namespace": "default",
 				},
 			},
 		},
 		{
-			// Select different object kind
-			query:              "SELECT * FROM deployments WHERE name=fake-name AND namespace=fake-namespace AND foo=bar AND blargle=flargle",
-			expectedErrorCount: 0,
+			name:  "WHERE clause is not case-sensitive",
+			query: "SELECT * FROM pods Where namespace=default",
 			expectedListener: ListenerImpl{
-				Kind:      "deployments",
-				Namespace: "fake-namespace",
-				Name:      "fake-name",
+				TableName: "pods",
 				ComparisonPredicates: map[string]string{
-					"foo":     "bar",
-					"blargle": "flargle",
+					"namespace": "default",
 				},
 			},
 		},
 		{
-			// Project multiple fields
-			query:              "SELECT name,namespace, foo,bar FROM deployments WHERE name=fake-name AND namespace=fake-namespace AND foo=bar AND blargle=flargle",
-			expectedErrorCount: 0,
+			name:               "WHERE clause must combine multiple conditions using a binary boolean operator",
+			query:              "SELECT * FROM pods WHERE name=blargle namespace=flargle",
+			expectedErrorCount: 1,
+		},
+		{
+			name:  "WHERE clause can combine multiple conditions using the AND operator",
+			query: "SELECT * FROM pods WHERE name=blargle AND namespace=flargle",
 			expectedListener: ListenerImpl{
-				Kind:      "deployments",
-				Namespace: "fake-namespace",
-				Name:      "fake-name",
+				TableName: "pods",
 				ComparisonPredicates: map[string]string{
-					"foo":     "bar",
-					"blargle": "flargle",
+					"name":      "blargle",
+					"namespace": "flargle",
 				},
+			},
+		},
+		{
+			name:  "AND operator is not case-sensitive",
+			query: "SELECT * FROM pods WHERE name=blargle And namespace=flargle",
+			expectedListener: ListenerImpl{
+				TableName: "pods",
+				ComparisonPredicates: map[string]string{
+					"name":      "blargle",
+					"namespace": "flargle",
+				},
+			},
+		},
+		{
+			name:               "AND operator is not unary",
+			query:              "SELECT * FROM pods WHERE AND name=blargle",
+			expectedErrorCount: 1,
+		},
+		{
+			name:               "AND operator is binary",
+			query:              "SELECT * FROM pods WHERE name=blargle AND",
+			expectedErrorCount: 1,
+		},
+		{
+			name:  "SELECT one column",
+			query: "SELECT blargle FROM deployments",
+			expectedListener: ListenerImpl{
+				TableName: "deployments",
 				ProjectionColumns: []string{
-					"name",
-					"namespace",
-					"foo",
-					"bar",
+					"blargle",
 				},
 			},
 		},
 		{
-			// Project multiple duplicate fields
-			query:              "SELECT name,namespace,name, foo,name,bar FROM deployments WHERE name=fake-name AND namespace=fake-namespace AND foo=bar AND blargle=flargle",
-			expectedErrorCount: 0,
+			name:  "SELECT multiple columns including duplicates",
+			query: "SELECT blargle, flargle, blargle FROM deployments",
 			expectedListener: ListenerImpl{
-				Kind:      "deployments",
-				Namespace: "fake-namespace",
-				Name:      "fake-name",
-				ComparisonPredicates: map[string]string{
-					"foo":     "bar",
-					"blargle": "flargle",
-				},
+				TableName: "deployments",
 				ProjectionColumns: []string{
-					"name",
-					"namespace",
-					"name",
-					"foo",
-					"name",
-					"bar",
+					"blargle",
+					"flargle",
+					"blargle",
 				},
 			},
 		},
 		{
-			// Mixed-case keywords
-			query:              "SeLeCt * FrOm pods WhErE name=fake-name AnD namespace=fake-namespace aNd foo=bar and blargle=flargle",
-			expectedErrorCount: 0,
-			expectedListener: ListenerImpl{
-				Namespace: "fake-namespace",
-				Kind:      "pods",
-				Name:      "fake-name",
-				ComparisonPredicates: map[string]string{
-					"foo":     "bar",
-					"blargle": "flargle",
-				},
-			},
+			name:               "SELECT with empty columns is not allowed",
+			query:              "SELECT blargle,, blargle FROM deployments",
+			expectedErrorCount: 1,
 		},
 
 		// TODO(evan) Change RHS to be a quoted string, boolean, or numeric value
@@ -197,7 +180,7 @@ func TestParser(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		t.Run(c.query, func(t *testing.T) {
+		t.Run(c.name, func(t *testing.T) {
 			var errorListener ErrorListenerImpl
 			var listener ListenerImpl
 			p := Create(&errorListener, c.query)
@@ -206,8 +189,13 @@ func TestParser(t *testing.T) {
 
 			assert.Equal(t, c.expectedErrorCount, errorListener.Count)
 
+			if errorListener.Count > 0 {
+				listener = ListenerImpl{}
+			}
+
 			listener.field = ""
 			listener.value = ""
+
 			assert.Equal(t, c.expectedListener, listener)
 		})
 	}

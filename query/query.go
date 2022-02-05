@@ -39,8 +39,8 @@ func (q *Query) parseQuery(errorListener *sql.ErrorListenerImpl, listener *sql.L
 }
 
 func (q *Query) find(listener *sql.ListenerImpl) runtime.Object {
-	finder := finders.Create(q.clientSet, listener.Kind)
-	return finder.Find(namespaceFrom(listener, q.defaultNamespace), listener.Name)
+	finder := finders.Create(q.clientSet, listener.TableName)
+	return finder.Find(namespaceFrom(listener, q.defaultNamespace), listener.ComparisonPredicates["name"])
 }
 
 func (q *Query) print(results runtime.Object) {
@@ -62,11 +62,13 @@ func Create(streams genericclioptions.IOStreams, clientSet kubernetes.Interface,
 	}
 }
 
+// namespaceFrom returns the default namespace unless a namespace
+// was specified.
 func namespaceFrom(listener *sql.ListenerImpl, defaultNamespace string) (result string) {
 	result = defaultNamespace
 
-	if listener.Namespace != "" {
-		result = listener.Namespace
+	if listener.ComparisonPredicates["namespace"] != "" {
+		result = listener.ComparisonPredicates["namespace"]
 	}
 
 	return
