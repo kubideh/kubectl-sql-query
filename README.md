@@ -53,11 +53,11 @@ Fields in the metadata portion of a K8s object are the exception, and they may b
 | `.metadata.labels` | `labels` |
 | `.metadata.name` | `name`  |
 | `.metadata.namespace` | `namespace` |
-| `.metadata.finalizers` | `finalizersa` |
+| `.metadata.finalizers` | `finalizers` |
 
 **Projecting all fields:**
 
-An asterix (`*`) is used to project all the default columns in a table. For Kubernetes objects, all default columns means the following. The `namespace`, `name`, and `age` columns are shown for namespace-scoped objects. The `name` and `age` are shown for cluster-scoped objects. For example:
+An asterix (`*`) is used to project all the default columns in a table. For Kubernetes objects, all default columns means the following. The `namespace`, `name`, and `age` columns are shown for namespace-scoped objects. The `name` and `age` are shown for cluster-scoped objects. Some examples now follow.
 
 Project the default columns for a namespace-scoped object using an asterix:
 
@@ -118,5 +118,6 @@ Most standard SQL will be supported. A list of links to the
 sites that were referenced when building the SQL query grammar now
 follows.
 
+- [ API Reference for Kubernetes v1.23](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/)
 - [SQL Syntax](https://en.wikipedia.org/wiki/SQL_syntax)
 - [SQL Tutorial](https://www.w3schools.com/sql/default.asp)
