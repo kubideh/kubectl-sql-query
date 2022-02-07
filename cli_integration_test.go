@@ -47,6 +47,18 @@ func TestCommandHelp(t *testing.T) {
 	}
 }
 
+func TestCommandWithError(t *testing.T) {
+	out, err := exec.Command("kubectl", "cluster-info").CombinedOutput()
+
+	t.Log(string(out))
+	require.NoError(t, err, "Is the cluster up?")
+
+	out, err = exec.Command("kubectl", "sql", "query", "").CombinedOutput()
+
+	assert.EqualError(t, err, "exit status 1", "Expected a failure")
+	assert.Equal(t, "line 1:0 mismatched input '<EOF>' expecting SELECT\n", string(out), "Unexpected output")
+}
+
 func TestCommandWithQueryString(t *testing.T) {
 	for _, c := range [][]string{
 		{

@@ -1,6 +1,8 @@
 package query
 
 import (
+	"fmt"
+
 	"github.com/antlr/antlr4/runtime/Go/antlr"
 	"github.com/kubideh/kubectl-sql-query/finders"
 	"github.com/kubideh/kubectl-sql-query/query/sql"
@@ -18,19 +20,21 @@ type Query struct {
 }
 
 // Run the given SQL-query and print the results to the provided I/O streams.
-func (q *Query) Run(sqlQuery string) {
+func (q *Query) Run(sqlQuery string) int {
 	var errorListener sql.ErrorListenerImpl
 	var listener sql.ListenerImpl
 
 	q.parseQuery(&errorListener, &listener, sqlQuery)
 
-	if errorListener.Count > 0 {
-		panic("Found errors in input")
+	if errorListener.Count > 0 || errorListener.Error != nil {
+		fmt.Fprintf(q.streams.ErrOut, "%s\n", errorListener.Error.Error())
+		return 1
 	}
 
 	results := q.find(&listener)
 
 	q.print(results)
+	return 0
 }
 
 func (q *Query) parseQuery(errorListener *sql.ErrorListenerImpl, listener *sql.ListenerImpl, sqlQuery string) {

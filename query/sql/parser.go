@@ -3,6 +3,9 @@ package sql
 //go:generate antlr -Dlanguage=Go -Werror -o parser SQLQuery.g4
 
 import (
+	"fmt"
+	"strconv"
+
 	"github.com/antlr/antlr4/runtime/Go/antlr"
 	"github.com/kubideh/kubectl-sql-query/query/sql/parser"
 )
@@ -10,23 +13,14 @@ import (
 // ErrorListenerImpl is an antlr.ErrorListener, and it tracks
 // errors when parsing the SQL query string.
 type ErrorListenerImpl struct {
+	*antlr.DefaultErrorListener
 	Count int
+	Error error
 }
 
 func (el *ErrorListenerImpl) SyntaxError(recognizer antlr.Recognizer, offendingSymbol interface{}, line, column int, msg string, e antlr.RecognitionException) {
 	el.Count += 1
-}
-
-func (el *ErrorListenerImpl) ReportAmbiguity(recognizer antlr.Parser, dfa *antlr.DFA, startIndex, stopIndex int, exact bool, ambigAlts *antlr.BitSet, configs antlr.ATNConfigSet) {
-	el.Count += 1
-}
-
-func (el ErrorListenerImpl) ReportAttemptingFullContext(recognizer antlr.Parser, dfa *antlr.DFA, startIndex, stopIndex int, conflictingAlts *antlr.BitSet, configs antlr.ATNConfigSet) {
-	el.Count += 1
-}
-
-func (el *ErrorListenerImpl) ReportContextSensitivity(recognizer antlr.Parser, dfa *antlr.DFA, startIndex, stopIndex, prediction int, configs antlr.ATNConfigSet) {
-	el.Count += 1
+	el.Error = fmt.Errorf("line " + strconv.Itoa(line) + ":" + strconv.Itoa(column) + " " + msg)
 }
 
 var _ antlr.ErrorListener = &ErrorListenerImpl{}
@@ -97,6 +91,7 @@ func createTokenStream(lexer *parser.SQLQueryLexer) *antlr.CommonTokenStream {
 
 func createParser(errorListener *ErrorListenerImpl, tokenStream *antlr.CommonTokenStream) (queryParser *parser.SQLQueryParser) {
 	queryParser = parser.NewSQLQueryParser(tokenStream)
+	queryParser.RemoveErrorListeners()
 	queryParser.AddErrorListener(errorListener)
 
 	return

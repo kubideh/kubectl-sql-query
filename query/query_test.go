@@ -21,7 +21,16 @@ func TestQueryFunction(t *testing.T) {
 		sqlQuery         string
 		expectedOutput   string
 		expectedError    string
+		returnCode       int
 	}{
+		{
+			setupFakes:       nilFakeFunc,
+			defaultNamespace: "",
+			sqlQuery:         "",
+			expectedOutput:   "",
+			expectedError:    "line 1:0 mismatched input '<EOF>' expecting SELECT\n",
+			returnCode:       1,
+		},
 		// Select pod by name and namespace
 		{
 			setupFakes: func(fakeClientSet *fake.Clientset) {
@@ -160,8 +169,9 @@ blargle     fake-deployment   <unknown>
 
 			streams, _, outBuf, errBuf := genericclioptions.NewTestIOStreams()
 			queryCmd := Create(streams, fakeClientSet, c.defaultNamespace)
-			queryCmd.Run(c.sqlQuery)
+			rc := queryCmd.Run(c.sqlQuery)
 
+			assert.Equal(t, c.returnCode, rc)
 			assert.Equal(t, c.expectedOutput, outBuf.String())
 			assert.Equal(t, c.expectedError, errBuf.String())
 		})

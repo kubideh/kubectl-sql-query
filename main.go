@@ -26,7 +26,8 @@ func main() {
 	kubeConfig := createKubeConfig()
 
 	cmd := query.Create(createStreams(), createClientSet(kubeConfig), defaultNamespace(kubeConfig))
-	cmd.Run(sqlQuery())
+	rc := cmd.Run(sqlQuery())
+	os.Exit(rc)
 }
 
 func createFlags() {
