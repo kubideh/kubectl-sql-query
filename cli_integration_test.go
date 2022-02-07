@@ -48,18 +48,17 @@ func TestCommandHelp(t *testing.T) {
 }
 
 func TestCommandWithError(t *testing.T) {
-	out, err := exec.Command("kubectl", "cluster-info").CombinedOutput()
+	verifyClusterIsUp(t)
 
-	t.Log(string(out))
-	require.NoError(t, err, "Is the cluster up?")
-
-	out, err = exec.Command("kubectl", "sql", "query", "").CombinedOutput()
+	out, err := exec.Command("kubectl", "sql", "query", "").CombinedOutput()
 
 	assert.EqualError(t, err, "exit status 1", "Expected a failure")
 	assert.Equal(t, "line 1:0 mismatched input '<EOF>' expecting SELECT\n", string(out), "Unexpected output")
 }
 
 func TestCommandWithQueryString(t *testing.T) {
+	verifyClusterIsUp(t)
+
 	for _, c := range [][]string{
 		{
 			"kubectl-sql-query",
@@ -86,6 +85,8 @@ func TestCommandWithQueryString(t *testing.T) {
 func TestCommandUsingNamespaceInContext(t *testing.T) {
 	const namespaceName = "fake-namespace-blargle"
 	const podName = "fake-pod-blargle"
+
+	verifyClusterIsUp(t)
 
 	clientConfigLoadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
 	configOverrides := &clientcmd.ConfigOverrides{
@@ -145,4 +146,11 @@ func TestCommandUsingNamespaceInContext(t *testing.T) {
 
 	assert.NoError(t, err, "Failed to run kubectl-sql-query \"SELECT * FROM pods\"")
 	assert.Contains(t, string(out), podName, "Unexpected output")
+}
+
+func verifyClusterIsUp(t *testing.T) {
+	out, err := exec.Command("kubectl", "cluster-info").CombinedOutput()
+
+	t.Log(string(out))
+	require.NoError(t, err, "Is the cluster up?")
 }
