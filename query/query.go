@@ -10,6 +10,8 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/cli-runtime/pkg/printers"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/kubectl/pkg/cmd/get"
+	"k8s.io/kubectl/pkg/scheme"
 )
 
 // Query is a command that executes an SQL-query against the K8s API.
@@ -33,7 +35,7 @@ func (q *Query) Run(sqlQuery string) int {
 
 	results := q.find(&listener)
 
-	q.print(results)
+	q.print(listener.ProjectionColumns, results)
 	return 0
 }
 
@@ -47,10 +49,33 @@ func (q *Query) find(listener *sql.ListenerImpl) runtime.Object {
 	return finder.Find(namespaceFrom(listener, q.defaultNamespace), listener.ComparisonPredicates["name"])
 }
 
-func (q *Query) print(results runtime.Object) {
-	printer := printers.NewTablePrinter(printers.PrintOptions{
-		WithNamespace: true,
-	})
+func (q *Query) print(columns []string, results runtime.Object) {
+	var printer printers.ResourcePrinter
+
+	if len(columns) == 0 {
+		printer = printers.NewTablePrinter(printers.PrintOptions{
+			WithNamespace: true,
+		})
+	} else {
+		var spec string
+
+		for i, c := range columns {
+			if i == 0 {
+				spec += fmt.Sprintf("%s:%s", c, c)
+			} else {
+				spec += fmt.Sprintf(",%s:%s", c, c)
+			}
+		}
+
+		decoder := scheme.Codecs.UniversalDecoder(scheme.Scheme.PrioritizedVersionsAllGroups()...)
+
+		var err error
+		printer, err = get.NewCustomColumnsPrinterFromSpec(spec, decoder, false)
+
+		if err != nil {
+			panic(err.Error())
+		}
+	}
 
 	if err := printer.PrintObj(results, q.streams.Out); err != nil {
 		panic(err.Error())

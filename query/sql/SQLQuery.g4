@@ -33,7 +33,7 @@ FROM:           F R O M ;
 SELECT:         S E L E C T ;
 WHERE:          W H E R E ;
 AND:            A N D ;
-IDENTIFIER:     [a-zA-Z0-9] [a-zA-Z0-9-.]* ;
+IDENTIFIER:     [a-zA-Z0-9.] [a-zA-Z0-9-.]* ;
 WHITESPACE:     [ \u000B\t\r\n]+ -> skip ;
 
 fragment A: [aA];

@@ -118,6 +118,17 @@ func TestParser(t *testing.T) {
 			},
 		},
 		{
+			name:  "SELECT some column using JSON notation",
+			query: "SELECT .foo.bar.blargleFlargle, .yolo FROM deployments",
+			expectedListener: ListenerImpl{
+				TableName: "deployments",
+				ProjectionColumns: []string{
+					".foo.bar.blargleFlargle",
+					".yolo",
+				},
+			},
+		},
+		{
 			name:               "SELECT with empty columns is not allowed",
 			query:              "SELECT blargle,, blargle FROM deployments",
 			expectedErrorCount: 1,

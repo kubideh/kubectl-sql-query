@@ -148,10 +148,66 @@ blargle     fake-deployment   <unknown>
 `,
 			expectedError: "",
 		},
+		{
+			name: "Query for specific type meta columns using JSON notation",
+			setupFakes: func(fakeClientSet *fake.Clientset) {
+				_, err := fakeClientSet.CoreV1().Pods("kube-system").Create(
+					context.TODO(),
+					&v1.Pod{
+						TypeMeta: metav1.TypeMeta{
+							Kind:       "pods",
+							APIVersion: "v1",
+						},
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: "kube-system",
+							Name:      "kube-apiserver-kind-control-plane",
+						},
+					},
+					metav1.CreateOptions{},
+				)
 
-		// TODO(evan) Project columns
+				if err != nil {
+					panic(err.Error())
+				}
+			},
+			defaultNamespace: "",
+			sqlQuery:         "SELECT .kind, .apiVersion FROM pods WHERE name=kube-apiserver-kind-control-plane AND namespace=kube-system",
+			expectedOutput: `.kind   .apiVersion
+pods    v1
+`,
+			expectedError: "",
+		},
+		{
+			name: "Query for specific type meta columns using supported aliases",
+			setupFakes: func(fakeClientSet *fake.Clientset) {
+				_, err := fakeClientSet.CoreV1().Pods("kube-system").Create(
+					context.TODO(),
+					&v1.Pod{
+						TypeMeta: metav1.TypeMeta{
+							Kind:       "pods",
+							APIVersion: "v1",
+						},
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: "kube-system",
+							Name:      "kube-apiserver-kind-control-plane",
+						},
+					},
+					metav1.CreateOptions{},
+				)
 
-		// TODO(evan) Allow the projection of missing columns
+				if err != nil {
+					panic(err.Error())
+				}
+			},
+			defaultNamespace: "",
+			sqlQuery:         "SELECT kind, apiVersion FROM pods WHERE name=kube-apiserver-kind-control-plane AND namespace=kube-system",
+			expectedOutput: `kind   apiVersion
+pods   v1
+`,
+			expectedError: "",
+		},
+
+		// TODO(evan) Query for missing columns
 
 		// TODO(evan) Allow comparison using predicates
 
