@@ -24,7 +24,7 @@ alias ksql=kubectl-sql-query
 Query the Kubernetes API:
 
 ```console
-kubectl sql query 'SELECT * FROM pods WHERE name=kube-apiserver-kind-control-plane AND namespace=kube-system'
+kubectl sql query "SELECT * FROM pods WHERE name='kube-apiserver-kind-control-plane' AND namespace='kube-system'"
 ```
 
 ## SQL Query
@@ -62,7 +62,7 @@ An asterix (`*`) is used to project all the default columns in a table. For Kube
 Project the default columns for a namespace-scoped object using an asterix:
 
 ```console
-kubectl sql query 'SELECT * FROM pods WHERE name=kube-apiserver-kind-control-plane AND namespace=kube-system'
+kubectl sql query "SELECT * FROM pods WHERE name='kube-apiserver-kind-control-plane' AND namespace='kube-system'"
 
 NAMESPACE     NAME                                AGE
 kube-system   kube-apiserver-kind-control-plane   46m
@@ -71,7 +71,7 @@ kube-system   kube-apiserver-kind-control-plane   46m
 Project the default columns for a cluster-scoped object using an asterix:
 
 ```console
-kubectl sql query 'SELECT * FROM clusterroles WHERE name=system:basic-user'
+kubectl sql query "SELECT * FROM clusterroles WHERE name='system:basic-user'"
 
 NAME                AGE
 system:basic-user   46m
