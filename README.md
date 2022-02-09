@@ -49,11 +49,11 @@ Fields in the metadata portion of a K8s object are the exception, and they may b
 | `.kind` | `kind` |
 | `.metadata.annotations` | `annotations` |
 | `.metadata.creationTimestamp` | `creationTimestamp` |
+| `.metadata.finalizers` | `finalizers` |
 | `.metadata.generateName` | `generateName` |
 | `.metadata.labels` | `labels` |
 | `.metadata.name` | `name`  |
 | `.metadata.namespace` | `namespace` |
-| `.metadata.finalizers` | `finalizers` |
 
 **Projecting all fields:**
 

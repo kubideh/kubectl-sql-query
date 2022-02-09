@@ -57,9 +57,28 @@ func (q *Query) print(columns []string, results runtime.Object) {
 			WithNamespace: true,
 		})
 	} else {
+		aliases := map[string]string{
+			"annotations":       ".metadata.annotations",
+			"creationTimestamp": ".metadata.creationTimestamp",
+			"finalizers":        ".metadata.finalizers",
+			"generateName":      ".metadata.generateName",
+			"labels":            ".metadata.labels",
+			"name":              ".metadata.name",
+			"namespace":         ".metadata.namespace",
+		}
+
+		var aliasedColumns []string
+		for _, c := range columns {
+			if real, ok := aliases[c]; ok {
+				aliasedColumns = append(aliasedColumns, real)
+			} else {
+				aliasedColumns = append(aliasedColumns, c)
+			}
+		}
+
 		var spec string
 
-		for i, c := range columns {
+		for i, c := range aliasedColumns {
 			if i == 0 {
 				spec += fmt.Sprintf("%s:%s", c, c)
 			} else {
