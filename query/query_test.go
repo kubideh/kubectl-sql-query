@@ -282,8 +282,35 @@ map[blargle:flargle foo:bar]   %s   [blargle flargle]      blargle-flargle-     
 `, creationTimestamp.String()),
 			expectedError: "",
 		},
+		{
+			name: "Query for missing columns",
+			setupFakes: func(fakeClientSet *fake.Clientset) {
+				_, err := fakeClientSet.CoreV1().Pods("kube-system").Create(
+					context.TODO(),
+					&v1.Pod{
+						TypeMeta: metav1.TypeMeta{
+							Kind:       "pods",
+							APIVersion: "v1",
+						},
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: "kube-system",
+							Name:      "kube-apiserver-kind-control-plane",
+						},
+					},
+					metav1.CreateOptions{},
+				)
 
-		// TODO(evan) Query for missing columns
+				if err != nil {
+					panic(err.Error())
+				}
+			},
+			defaultNamespace: "",
+			sqlQuery:         "SELECT .kind, .apiVersion, .blargle, .flargle FROM pods WHERE name=kube-apiserver-kind-control-plane AND namespace=kube-system",
+			expectedOutput: `.kind   .apiVersion   .blargle   .flargle
+pods    v1            <none>     <none>
+`,
+			expectedError: "",
+		},
 
 		// TODO(evan) Allow comparison using predicates
 
