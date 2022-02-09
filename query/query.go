@@ -49,52 +49,76 @@ func (q *Query) find(listener *sql.ListenerImpl) runtime.Object {
 	return finder.Find(namespaceFrom(listener, q.defaultNamespace), listener.ComparisonPredicates["name"])
 }
 
-func (q *Query) print(columns []string, results runtime.Object) {
-	var printer printers.ResourcePrinter
+var objectMetadataColumnAliases = map[string]string{
+	"annotations":       ".metadata.annotations",
+	"creationTimestamp": ".metadata.creationTimestamp",
+	"finalizers":        ".metadata.finalizers",
+	"generateName":      ".metadata.generateName",
+	"labels":            ".metadata.labels",
+	"name":              ".metadata.name",
+	"namespace":         ".metadata.namespace",
+}
 
-	if len(columns) == 0 {
-		printer = printers.NewTablePrinter(printers.PrintOptions{
-			WithNamespace: true,
-		})
-	} else {
-		aliases := map[string]string{
-			"annotations":       ".metadata.annotations",
-			"creationTimestamp": ".metadata.creationTimestamp",
-			"finalizers":        ".metadata.finalizers",
-			"generateName":      ".metadata.generateName",
-			"labels":            ".metadata.labels",
-			"name":              ".metadata.name",
-			"namespace":         ".metadata.namespace",
-		}
+func columnsFromAliases(columns []string) (result []string) {
+	for _, c := range columns {
+		result = append(result, columnFromAliases(c))
+	}
 
-		var aliasedColumns []string
-		for _, c := range columns {
-			if real, ok := aliases[c]; ok {
-				aliasedColumns = append(aliasedColumns, real)
-			} else {
-				aliasedColumns = append(aliasedColumns, c)
-			}
-		}
+	return
+}
 
-		var spec string
+func columnFromAliases(c string) string {
+	if real, ok := objectMetadataColumnAliases[c]; ok {
+		return real
+	}
 
-		for i, c := range aliasedColumns {
-			if i == 0 {
-				spec += fmt.Sprintf("%s:%s", c, c)
-			} else {
-				spec += fmt.Sprintf(",%s:%s", c, c)
-			}
-		}
+	return c
+}
 
-		decoder := scheme.Codecs.UniversalDecoder(scheme.Scheme.PrioritizedVersionsAllGroups()...)
-
-		var err error
-		printer, err = get.NewCustomColumnsPrinterFromSpec(spec, decoder, false)
-
-		if err != nil {
-			panic(err.Error())
+func columnSpec(columns []string) (spec string) {
+	for i, c := range columns {
+		if i == 0 {
+			spec += fmt.Sprintf("%s:%s", c, c)
+		} else {
+			spec += fmt.Sprintf(",%s:%s", c, c)
 		}
 	}
+
+	return
+}
+
+func createDefaultPrinter() printers.ResourcePrinter {
+	return printers.NewTablePrinter(printers.PrintOptions{
+		WithNamespace: true,
+	})
+}
+
+func createCustomColumnsPrinter(columns []string) printers.ResourcePrinter {
+	aliasedColumns := columnsFromAliases(columns)
+
+	spec := columnSpec(aliasedColumns)
+
+	decoder := scheme.Codecs.UniversalDecoder(scheme.Scheme.PrioritizedVersionsAllGroups()...)
+
+	printer, err := get.NewCustomColumnsPrinterFromSpec(spec, decoder, false)
+
+	if err != nil {
+		panic(err.Error())
+	}
+
+	return printer
+}
+
+func createPrinter(columns []string) printers.ResourcePrinter {
+	if len(columns) == 0 {
+		return createDefaultPrinter()
+	}
+
+	return createCustomColumnsPrinter(columns)
+}
+
+func (q *Query) print(columns []string, results runtime.Object) {
+	printer := createPrinter(columns)
 
 	if err := printer.PrintObj(results, q.streams.Out); err != nil {
 		panic(err.Error())
