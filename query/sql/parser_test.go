@@ -40,7 +40,7 @@ func TestParser(t *testing.T) {
 		},
 		{
 			name:  "WHERE clause can have just one condition",
-			query: "SELECT * FROM pods WHERE namespace=default",
+			query: "SELECT * FROM pods WHERE namespace='default'",
 			expectedListener: ListenerImpl{
 				TableName: "pods",
 				ComparisonPredicates: map[string]string{
@@ -50,7 +50,7 @@ func TestParser(t *testing.T) {
 		},
 		{
 			name:  "WHERE clause is not case-sensitive",
-			query: "SELECT * FROM pods Where namespace=default",
+			query: "SELECT * FROM pods Where namespace='default'",
 			expectedListener: ListenerImpl{
 				TableName: "pods",
 				ComparisonPredicates: map[string]string{
@@ -60,12 +60,12 @@ func TestParser(t *testing.T) {
 		},
 		{
 			name:               "WHERE clause must combine multiple conditions using a binary boolean operator",
-			query:              "SELECT * FROM pods WHERE name=blargle namespace=flargle",
+			query:              "SELECT * FROM pods WHERE name='blargle' namespace='flargle'",
 			expectedErrorCount: 1,
 		},
 		{
 			name:  "WHERE clause can combine multiple conditions using the AND operator",
-			query: "SELECT * FROM pods WHERE name=blargle AND namespace=flargle",
+			query: "SELECT * FROM pods WHERE name='blargle' AND namespace='flargle'",
 			expectedListener: ListenerImpl{
 				TableName: "pods",
 				ComparisonPredicates: map[string]string{
@@ -76,7 +76,7 @@ func TestParser(t *testing.T) {
 		},
 		{
 			name:  "AND operator is not case-sensitive",
-			query: "SELECT * FROM pods WHERE name=blargle And namespace=flargle",
+			query: "SELECT * FROM pods WHERE name='blargle' And namespace='flargle'",
 			expectedListener: ListenerImpl{
 				TableName: "pods",
 				ComparisonPredicates: map[string]string{
@@ -87,12 +87,12 @@ func TestParser(t *testing.T) {
 		},
 		{
 			name:               "AND operator is not unary",
-			query:              "SELECT * FROM pods WHERE AND name=blargle",
+			query:              "SELECT * FROM pods WHERE AND name='blargle'",
 			expectedErrorCount: 1,
 		},
 		{
 			name:               "AND operator is binary",
-			query:              "SELECT * FROM pods WHERE name=blargle AND",
+			query:              "SELECT * FROM pods WHERE name='blargle' AND",
 			expectedErrorCount: 1,
 		},
 		{
@@ -202,6 +202,7 @@ func TestParser(t *testing.T) {
 
 			if errorListener.Count > 0 {
 				listener = ListenerImpl{}
+				t.Log(errorListener.Error.Error())
 			}
 
 			listener.field = ""

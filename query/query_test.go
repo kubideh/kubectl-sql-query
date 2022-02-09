@@ -59,7 +59,7 @@ func TestQueryFunction(t *testing.T) {
 				}
 			},
 			defaultNamespace: "",
-			sqlQuery:         "SELECT * FROM pods WHERE name=kube-apiserver-kind-control-plane AND namespace=kube-system",
+			sqlQuery:         "SELECT * FROM pods WHERE name='kube-apiserver-kind-control-plane' AND namespace='kube-system'",
 			expectedOutput: `NAMESPACE     NAME                                AGE
 kube-system   kube-apiserver-kind-control-plane   <unknown>
 `,
@@ -107,7 +107,7 @@ kube-system   kube-apiserver-kind-control-plane   <unknown>
 				}
 			},
 			defaultNamespace: "",
-			sqlQuery:         "SELECT * FROM pods WHERE namespace=kube-system",
+			sqlQuery:         "SELECT * FROM pods WHERE namespace='kube-system'",
 			expectedOutput: `NAMESPACE     NAME                                AGE
 kube-system   kube-apiserver-kind-control-plane   <unknown>
 kube-system   kube-scheduler-kind-control-plane   <unknown>
@@ -174,7 +174,7 @@ blargle     fake-deployment   <unknown>
 				}
 			},
 			defaultNamespace: "",
-			sqlQuery:         "SELECT .kind, .apiVersion FROM pods WHERE name=kube-apiserver-kind-control-plane AND namespace=kube-system",
+			sqlQuery:         "SELECT .kind, .apiVersion FROM pods WHERE name='kube-apiserver-kind-control-plane' AND namespace='kube-system'",
 			expectedOutput: `.kind   .apiVersion
 pods    v1
 `,
@@ -203,7 +203,7 @@ pods    v1
 				}
 			},
 			defaultNamespace: "",
-			sqlQuery:         "SELECT kind, apiVersion FROM pods WHERE name=kube-apiserver-kind-control-plane AND namespace=kube-system",
+			sqlQuery:         "SELECT kind, apiVersion FROM pods WHERE name='kube-apiserver-kind-control-plane' AND namespace='kube-system'",
 			expectedOutput: `kind   apiVersion
 pods   v1
 `,
@@ -232,7 +232,7 @@ pods   v1
 				}
 			},
 			defaultNamespace: "",
-			sqlQuery:         "SELECT .metadata.name, .metadata.namespace FROM pods WHERE name=kube-apiserver-kind-control-plane AND namespace=kube-system",
+			sqlQuery:         "SELECT .metadata.name, .metadata.namespace FROM pods WHERE name='kube-apiserver-kind-control-plane' AND namespace='kube-system'",
 			expectedOutput: `.metadata.name                      .metadata.namespace
 kube-apiserver-kind-control-plane   kube-system
 `,
@@ -275,7 +275,7 @@ kube-apiserver-kind-control-plane   kube-system
 				}
 			},
 			defaultNamespace: "",
-			sqlQuery:         "SELECT annotations, creationTimestamp, finalizers, generateName, labels, name, namespace FROM pods WHERE name=kube-apiserver-kind-control-plane AND namespace=kube-system",
+			sqlQuery:         "SELECT annotations, creationTimestamp, finalizers, generateName, labels, name, namespace FROM pods WHERE name='kube-apiserver-kind-control-plane' AND namespace='kube-system'",
 			expectedOutput: ".metadata.annotations          .metadata.creationTimestamp                           .metadata.finalizers   .metadata.generateName   .metadata.labels                   .metadata.name                      .metadata.namespace\n" +
 				"map[blargle:flargle foo:bar]   " + creationTimestamp.String() + "   [blargle flargle]      blargle-flargle-         map[label1:value1 label2:value2]   kube-apiserver-kind-control-plane   kube-system\n",
 			expectedError: "",
@@ -303,7 +303,7 @@ kube-apiserver-kind-control-plane   kube-system
 				}
 			},
 			defaultNamespace: "",
-			sqlQuery:         "SELECT .kind, .apiVersion, .blargle, .flargle FROM pods WHERE name=kube-apiserver-kind-control-plane AND namespace=kube-system",
+			sqlQuery:         "SELECT .kind, .apiVersion, .blargle, .flargle FROM pods WHERE name='kube-apiserver-kind-control-plane' AND namespace='kube-system'",
 			expectedOutput: `.kind   .apiVersion   .blargle   .flargle
 pods    v1            <none>     <none>
 `,

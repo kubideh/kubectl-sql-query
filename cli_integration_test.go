@@ -62,13 +62,13 @@ func TestCommandWithQueryString(t *testing.T) {
 	for _, c := range [][]string{
 		{
 			"kubectl-sql-query",
-			`SELECT * FROM pods WHERE namespace=default`,
+			`SELECT * FROM pods WHERE namespace='default''`,
 		},
 		{
 			"kubectl",
 			"sql",
 			"query",
-			`SELECT * FROM pods WHERE namespace=default`,
+			`SELECT * FROM pods WHERE namespace='default''`,
 		},
 	} {
 		t.Run(strings.Join(c, " "), func(t *testing.T) {

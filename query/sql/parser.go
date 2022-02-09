@@ -5,6 +5,7 @@ package sql
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr"
 	"github.com/kubideh/kubectl-sql-query/query/sql/parser"
@@ -52,13 +53,17 @@ func (l *ListenerImpl) ExitTable(ctx *parser.TableContext) {
 	l.TableName = ctx.GetText()
 }
 
-// ExitRhs is called when production rhs is exited.
-func (l *ListenerImpl) ExitRhs(ctx *parser.RhsContext) {
+// EnterRhs is called when production rhs is entered.
+func (l *ListenerImpl) EnterRhs(ctx *parser.RhsContext) {
 	if l.ComparisonPredicates == nil {
 		l.ComparisonPredicates = make(map[string]string)
 	}
 
-	l.ComparisonPredicates[l.field] = ctx.GetText()
+	value := ctx.GetText()
+	value = strings.TrimPrefix(value, "'")
+	value = strings.TrimRight(value, "'")
+
+	l.ComparisonPredicates[l.field] = value
 }
 
 var _ parser.SQLQueryListener = &ListenerImpl{}

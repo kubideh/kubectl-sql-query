@@ -16,7 +16,7 @@ var _ = reflect.Copy
 var _ = strconv.Itoa
 
 var parserATN = []uint16{
-	3, 24715, 42794, 33075, 47597, 16764, 15335, 30598, 22884, 3, 11, 78, 4,
+	3, 24715, 42794, 33075, 47597, 16764, 15335, 30598, 22884, 3, 12, 78, 4,
 	2, 9, 2, 4, 3, 9, 3, 4, 4, 9, 4, 4, 5, 9, 5, 4, 6, 9, 6, 4, 7, 9, 7, 4,
 	8, 9, 8, 4, 9, 9, 9, 4, 10, 9, 10, 4, 11, 9, 11, 4, 12, 9, 12, 4, 13, 9,
 	13, 3, 2, 3, 2, 3, 2, 3, 3, 3, 3, 3, 3, 5, 3, 33, 10, 3, 3, 4, 3, 4, 3,
@@ -31,27 +31,27 @@ var parserATN = []uint16{
 	2, 2, 2, 24, 75, 3, 2, 2, 2, 26, 27, 5, 4, 3, 2, 27, 28, 7, 2, 2, 3, 28,
 	3, 3, 2, 2, 2, 29, 30, 5, 6, 4, 2, 30, 32, 5, 8, 5, 2, 31, 33, 5, 16, 9,
 	2, 32, 31, 3, 2, 2, 2, 32, 33, 3, 2, 2, 2, 33, 5, 3, 2, 2, 2, 34, 35, 7,
-	7, 2, 2, 35, 36, 5, 10, 6, 2, 36, 7, 3, 2, 2, 2, 37, 38, 7, 6, 2, 2, 38,
-	39, 5, 14, 8, 2, 39, 9, 3, 2, 2, 2, 40, 50, 7, 4, 2, 2, 41, 46, 5, 12,
+	8, 2, 2, 35, 36, 5, 10, 6, 2, 36, 7, 3, 2, 2, 2, 37, 38, 7, 7, 2, 2, 38,
+	39, 5, 14, 8, 2, 39, 9, 3, 2, 2, 2, 40, 50, 7, 5, 2, 2, 41, 46, 5, 12,
 	7, 2, 42, 43, 7, 3, 2, 2, 43, 45, 5, 12, 7, 2, 44, 42, 3, 2, 2, 2, 45,
 	48, 3, 2, 2, 2, 46, 44, 3, 2, 2, 2, 46, 47, 3, 2, 2, 2, 47, 50, 3, 2, 2,
 	2, 48, 46, 3, 2, 2, 2, 49, 40, 3, 2, 2, 2, 49, 41, 3, 2, 2, 2, 50, 11,
-	3, 2, 2, 2, 51, 52, 7, 10, 2, 2, 52, 13, 3, 2, 2, 2, 53, 54, 7, 10, 2,
-	2, 54, 15, 3, 2, 2, 2, 55, 56, 7, 8, 2, 2, 56, 57, 5, 18, 10, 2, 57, 17,
+	3, 2, 2, 2, 51, 52, 7, 11, 2, 2, 52, 13, 3, 2, 2, 2, 53, 54, 7, 11, 2,
+	2, 54, 15, 3, 2, 2, 2, 55, 56, 7, 9, 2, 2, 56, 57, 5, 18, 10, 2, 57, 17,
 	3, 2, 2, 2, 58, 59, 8, 10, 1, 2, 59, 60, 5, 20, 11, 2, 60, 66, 3, 2, 2,
-	2, 61, 62, 12, 3, 2, 2, 62, 63, 7, 9, 2, 2, 63, 65, 5, 18, 10, 4, 64, 61,
-	3, 2, 2, 2, 65, 68, 3, 2, 2, 2, 66, 64, 3, 2, 2, 2, 66, 67, 3, 2, 2, 2,
-	67, 19, 3, 2, 2, 2, 68, 66, 3, 2, 2, 2, 69, 70, 5, 22, 12, 2, 70, 71, 7,
-	5, 2, 2, 71, 72, 5, 24, 13, 2, 72, 21, 3, 2, 2, 2, 73, 74, 7, 10, 2, 2,
-	74, 23, 3, 2, 2, 2, 75, 76, 7, 10, 2, 2, 76, 25, 3, 2, 2, 2, 6, 32, 46,
+	2, 61, 62, 12, 3, 2, 2, 62, 63, 7, 10, 2, 2, 63, 65, 5, 18, 10, 4, 64,
+	61, 3, 2, 2, 2, 65, 68, 3, 2, 2, 2, 66, 64, 3, 2, 2, 2, 66, 67, 3, 2, 2,
+	2, 67, 19, 3, 2, 2, 2, 68, 66, 3, 2, 2, 2, 69, 70, 5, 22, 12, 2, 70, 71,
+	7, 6, 2, 2, 71, 72, 5, 24, 13, 2, 72, 21, 3, 2, 2, 2, 73, 74, 7, 11, 2,
+	2, 74, 23, 3, 2, 2, 2, 75, 76, 7, 4, 2, 2, 76, 25, 3, 2, 2, 2, 6, 32, 46,
 	49, 66,
 }
 var literalNames = []string{
-	"", "','", "'*'", "'='",
+	"", "','", "", "'*'", "'='",
 }
 var symbolicNames = []string{
-	"", "", "ALL_COLUMNS", "EQ", "FROM", "SELECT", "WHERE", "AND", "IDENTIFIER",
-	"WHITESPACE",
+	"", "", "STRING", "ALL_COLUMNS", "EQ", "FROM", "SELECT", "WHERE", "AND",
+	"IDENTIFIER", "WHITESPACE",
 }
 
 var ruleNames = []string{
@@ -92,14 +92,15 @@ func NewSQLQueryParser(input antlr.TokenStream) *SQLQueryParser {
 const (
 	SQLQueryParserEOF         = antlr.TokenEOF
 	SQLQueryParserT__0        = 1
-	SQLQueryParserALL_COLUMNS = 2
-	SQLQueryParserEQ          = 3
-	SQLQueryParserFROM        = 4
-	SQLQueryParserSELECT      = 5
-	SQLQueryParserWHERE       = 6
-	SQLQueryParserAND         = 7
-	SQLQueryParserIDENTIFIER  = 8
-	SQLQueryParserWHITESPACE  = 9
+	SQLQueryParserSTRING      = 2
+	SQLQueryParserALL_COLUMNS = 3
+	SQLQueryParserEQ          = 4
+	SQLQueryParserFROM        = 5
+	SQLQueryParserSELECT      = 6
+	SQLQueryParserWHERE       = 7
+	SQLQueryParserAND         = 8
+	SQLQueryParserIDENTIFIER  = 9
+	SQLQueryParserWHITESPACE  = 10
 )
 
 // SQLQueryParser rules.
@@ -1451,8 +1452,8 @@ func NewRhsContext(parser antlr.Parser, parent antlr.ParserRuleContext, invoking
 
 func (s *RhsContext) GetParser() antlr.Parser { return s.parser }
 
-func (s *RhsContext) IDENTIFIER() antlr.TerminalNode {
-	return s.GetToken(SQLQueryParserIDENTIFIER, 0)
+func (s *RhsContext) STRING() antlr.TerminalNode {
+	return s.GetToken(SQLQueryParserSTRING, 0)
 }
 
 func (s *RhsContext) GetRuleContext() antlr.RuleContext {
@@ -1501,7 +1502,7 @@ func (p *SQLQueryParser) Rhs() (localctx IRhsContext) {
 	p.EnterOuterAlt(localctx, 1)
 	{
 		p.SetState(73)
-		p.Match(SQLQueryParserIDENTIFIER)
+		p.Match(SQLQueryParserSTRING)
 	}
 
 	return localctx

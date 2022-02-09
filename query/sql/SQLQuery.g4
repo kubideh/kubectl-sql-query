@@ -24,9 +24,10 @@ comparison: lhs EQ rhs ;
 
 lhs: IDENTIFIER ;
 
-rhs: IDENTIFIER ;
+rhs: STRING ;
 
 // Tokens
+STRING:         '\'' (~['])* '\'' ;
 ALL_COLUMNS:    '*' ;
 EQ:             '=' ;
 FROM:           F R O M ;
