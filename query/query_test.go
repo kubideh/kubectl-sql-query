@@ -2,7 +2,6 @@ package query
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -277,9 +276,8 @@ kube-apiserver-kind-control-plane   kube-system
 			},
 			defaultNamespace: "",
 			sqlQuery:         "SELECT annotations, creationTimestamp, finalizers, generateName, labels, name, namespace FROM pods WHERE name=kube-apiserver-kind-control-plane AND namespace=kube-system",
-			expectedOutput: fmt.Sprintf(`.metadata.annotations          .metadata.creationTimestamp                           .metadata.finalizers   .metadata.generateName   .metadata.labels                   .metadata.name                      .metadata.namespace
-map[blargle:flargle foo:bar]   %s   [blargle flargle]      blargle-flargle-         map[label1:value1 label2:value2]   kube-apiserver-kind-control-plane   kube-system
-`, creationTimestamp.String()),
+			expectedOutput: ".metadata.annotations          .metadata.creationTimestamp                           .metadata.finalizers   .metadata.generateName   .metadata.labels                   .metadata.name                      .metadata.namespace\n" +
+				"map[blargle:flargle foo:bar]   " + creationTimestamp.String() + "   [blargle flargle]      blargle-flargle-         map[label1:value1 label2:value2]   kube-apiserver-kind-control-plane   kube-system\n",
 			expectedError: "",
 		},
 		{
