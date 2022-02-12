@@ -96,6 +96,7 @@ Most standard or common SQL features are supported. What follows is a table that
 | IN Operator | |
 | BETWEEN Operator | |
 | Aliases (AS Keyword) | |
+| Cross join by querying for multiple tables | |
 | INNER JOIN | |
 | OUTER JOIN | |
 | LEFT JOIN | |
