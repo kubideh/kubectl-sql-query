@@ -7,7 +7,7 @@ import (
 
 	"github.com/kubideh/kubectl-sql-query/query"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"k8s.io/client-go/kubernetes"
+	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
@@ -21,16 +21,16 @@ Flags:
 `
 
 func main() {
-	createFlags()
+	parseFlags()
 
 	kubeConfig := createKubeConfig()
 
-	cmd := query.Create(createStreams(), createClientSet(kubeConfig), defaultNamespace(kubeConfig))
+	cmd := query.Create(createStreams(), createBuilder(), defaultNamespace(kubeConfig))
 	rc := cmd.Run(sqlQuery())
 	os.Exit(rc)
 }
 
-func createFlags() {
+func parseFlags() {
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), usageString)
 	}
@@ -68,20 +68,10 @@ func defaultNamespace(kubeConfig clientcmd.ClientConfig) (result string) {
 	return
 }
 
-func createClientSet(kubeConfig clientcmd.ClientConfig) *kubernetes.Clientset {
-	clientConfig, err := kubeConfig.ClientConfig()
+func createBuilder() *resource.Builder {
+	kubeConfigFlags := genericclioptions.NewConfigFlags(false)
 
-	if err != nil {
-		panic(err.Error())
-	}
-
-	clientSet, err := kubernetes.NewForConfig(clientConfig)
-
-	if err != nil {
-		panic(err.Error())
-	}
-
-	return clientSet
+	return resource.NewBuilder(kubeConfigFlags)
 }
 
 func sqlQuery() string {

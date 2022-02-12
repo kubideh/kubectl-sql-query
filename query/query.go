@@ -4,20 +4,20 @@ import (
 	"fmt"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr"
-	"github.com/kubideh/kubectl-sql-query/finders"
 	"github.com/kubideh/kubectl-sql-query/query/sql"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/cli-runtime/pkg/printers"
-	"k8s.io/client-go/kubernetes"
+	"k8s.io/cli-runtime/pkg/resource"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/kubectl/pkg/cmd/get"
-	"k8s.io/kubectl/pkg/scheme"
 )
 
 // Query is a command that executes an SQL-query against the K8s API.
 type Query struct {
 	streams          genericclioptions.IOStreams
-	clientSet        kubernetes.Interface
+	builder          *resource.Builder
 	defaultNamespace string
 }
 
@@ -29,7 +29,7 @@ func (q *Query) Run(sqlQuery string) int {
 	q.parseQuery(&errorListener, &listener, sqlQuery)
 
 	if errorListener.Count > 0 || errorListener.Error != nil {
-		fmt.Fprintf(q.streams.ErrOut, "%s\n", errorListener.Error.Error())
+		fmt.Fprintf(q.streams.ErrOut, "%v\n", errorListener.Error.Error())
 		return 1
 	}
 
@@ -45,8 +45,29 @@ func (q *Query) parseQuery(errorListener *sql.ErrorListenerImpl, listener *sql.L
 }
 
 func (q *Query) find(listener *sql.ListenerImpl) runtime.Object {
-	finder := finders.Create(q.clientSet, listener.TableName)
-	return finder.Find(namespaceFrom(listener, q.defaultNamespace), listener.ComparisonPredicates["name"])
+	resourceTypeOrName := listener.TableName
+	if name := listener.ComparisonPredicates["name"]; name != "" {
+		resourceTypeOrName = fmt.Sprintf("%s/%s", listener.TableName, name)
+	}
+
+	builder := q.builder.
+		WithScheme(scheme.Scheme, scheme.Scheme.PrioritizedVersionsAllGroups()...).
+		NamespaceParam(namespaceFrom(listener, q.defaultNamespace)).
+		DefaultNamespace().
+		ResourceTypeOrNameArgs(true, resourceTypeOrName).
+		ContinueOnError().
+		Latest()
+
+	result := builder.Do()
+
+	object, err := result.Object()
+
+	if err != nil {
+		fmt.Fprintf(q.streams.ErrOut, "%v\n", err)
+		return &v1.List{}
+	}
+
+	return object
 }
 
 var objectMetadataColumnAliases = map[string]string{
@@ -126,10 +147,10 @@ func (q *Query) print(columns []string, results runtime.Object) {
 }
 
 // Create returns a new Query object.
-func Create(streams genericclioptions.IOStreams, clientSet kubernetes.Interface, defaultNamespace string) *Query {
+func Create(streams genericclioptions.IOStreams, builder *resource.Builder, defaultNamespace string) *Query {
 	return &Query{
 		streams:          streams,
-		clientSet:        clientSet,
+		builder:          builder,
 		defaultNamespace: defaultNamespace,
 	}
 }

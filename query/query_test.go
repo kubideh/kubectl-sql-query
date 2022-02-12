@@ -1,26 +1,33 @@
 package query
 
 import (
-	"context"
+	"bytes"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"net/http"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
-	appsv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	"k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/api/meta/testrestmapper"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/cli-runtime/pkg/resource"
+	"k8s.io/client-go/kubernetes/scheme"
+	clientFake "k8s.io/client-go/rest/fake"
+	"k8s.io/client-go/restmapper"
 )
 
 func TestQueryFunction(t *testing.T) {
-	var nilFakeFunc = func(fakeClientSet *fake.Clientset) {}
-
-	creationTimestamp := metav1.NewTime(time.Now())
+	//creationTimestamp := metav1.NewTime(time.Now())
 
 	cases := []struct {
 		name             string
-		setupFakes       func(fakeClientSet *fake.Clientset)
+		restClient       resource.RESTClient
 		defaultNamespace string
 		sqlQuery         string
 		expectedOutput   string
@@ -28,289 +35,214 @@ func TestQueryFunction(t *testing.T) {
 		returnCode       int
 	}{
 		{
-			name:             "Query parse failure",
-			setupFakes:       nilFakeFunc,
-			defaultNamespace: "",
-			sqlQuery:         "",
-			expectedOutput:   "",
-			expectedError:    "line 1:0 mismatched input '<EOF>' expecting SELECT\n",
-			returnCode:       1,
+			name:          "Query fails to parse",
+			expectedError: "line 1:0 mismatched input '<EOF>' expecting SELECT\n",
+			returnCode:    1,
 		},
 		{
-			name: "Query for a specific object",
-			setupFakes: func(fakeClientSet *fake.Clientset) {
-				_, err := fakeClientSet.CoreV1().Pods("kube-system").Create(
-					context.TODO(),
-					&v1.Pod{
-						TypeMeta: metav1.TypeMeta{
-							Kind:       "pods",
-							APIVersion: "v1",
-						},
-						ObjectMeta: metav1.ObjectMeta{
-							Namespace: "kube-system",
-							Name:      "kube-apiserver-kind-control-plane",
-						},
-					},
-					metav1.CreateOptions{},
-				)
+			name: "Query without any matches returns an empty table",
+			restClient: &clientFake.RESTClient{
+				GroupVersion:         v1.SchemeGroupVersion,
+				NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
+				Client: clientFake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
+					if req.URL.Path != fmt.Sprintf("/namespaces/default/pods/nginx") {
+						return &http.Response{
+							StatusCode: http.StatusNotFound,
+						}, nil
+					}
 
-				if err != nil {
-					panic(err.Error())
-				}
+					header := http.Header{}
+					header.Set("Content-Type", runtime.ContentTypeJSON)
+
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Header:     header,
+						Body: body(v1.SchemeGroupVersion, &v1.Pod{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "nginx",
+								Namespace: "default",
+							},
+						}),
+					}, nil
+				}),
 			},
-			defaultNamespace: "",
-			sqlQuery:         "SELECT * FROM pods WHERE name='kube-apiserver-kind-control-plane' AND namespace='kube-system'",
-			expectedOutput: `NAMESPACE     NAME                                AGE
-kube-system   kube-apiserver-kind-control-plane   <unknown>
-`,
-			expectedError: "",
-		},
-		{
-			name: "Query for multiple objects",
-			setupFakes: func(fakeClientSet *fake.Clientset) {
-				_, err := fakeClientSet.CoreV1().Pods("kube-system").Create(
-					context.TODO(),
-					&v1.Pod{
-						TypeMeta: metav1.TypeMeta{
-							Kind:       "pods",
-							APIVersion: "v1",
-						},
-						ObjectMeta: metav1.ObjectMeta{
-							Namespace: "kube-system",
-							Name:      "kube-apiserver-kind-control-plane",
-						},
-					},
-					metav1.CreateOptions{},
-				)
-
-				if err != nil {
-					panic(err.Error())
-				}
-
-				_, err = fakeClientSet.CoreV1().Pods("kube-system").Create(
-					context.TODO(),
-					&v1.Pod{
-						TypeMeta: metav1.TypeMeta{
-							Kind:       "pods",
-							APIVersion: "v1",
-						},
-						ObjectMeta: metav1.ObjectMeta{
-							Namespace: "kube-system",
-							Name:      "kube-scheduler-kind-control-plane",
-						},
-					},
-					metav1.CreateOptions{},
-				)
-
-				if err != nil {
-					panic(err.Error())
-				}
-			},
-			defaultNamespace: "",
-			sqlQuery:         "SELECT * FROM pods WHERE namespace='kube-system'",
-			expectedOutput: `NAMESPACE     NAME                                AGE
-kube-system   kube-apiserver-kind-control-plane   <unknown>
-kube-system   kube-scheduler-kind-control-plane   <unknown>
-`,
-			expectedError: "",
-		},
-		{
-			name:             "Query results are empty",
-			setupFakes:       nilFakeFunc,
-			defaultNamespace: "blargle",
-			sqlQuery:         "SELECT * FROM pods",
+			defaultNamespace: "default",
+			sqlQuery:         "SELECT * FROM pods where name='foo'",
 			expectedOutput:   "NAMESPACE   NAME   AGE\n",
-			expectedError:    "",
+			expectedError:    "the server could not find the requested resource (get pods foo)\n",
 		},
 		{
-			name: "Query for a different kind of object",
-			setupFakes: func(fakeClientSet *fake.Clientset) {
-				_, err := fakeClientSet.AppsV1().Deployments("blargle").Create(
-					context.Background(),
-					&appsv1.Deployment{
-						TypeMeta: metav1.TypeMeta{
-							Kind:       "deployments",
-							APIVersion: "apps/v1",
-						},
-						ObjectMeta: metav1.ObjectMeta{
-							Namespace: "blargle",
-							Name:      "fake-deployment",
-						},
-					},
-					metav1.CreateOptions{},
-				)
+			name: "Query for all objects in the default namespace",
+			restClient: &clientFake.RESTClient{
+				GroupVersion:         v1.SchemeGroupVersion,
+				NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
+				Client: clientFake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
+					if req.URL.Path != fmt.Sprintf("/namespaces/default/pods") {
+						return &http.Response{
+							StatusCode: http.StatusNotFound,
+						}, nil
+					}
 
-				if err != nil {
-					panic(err.Error())
-				}
-			},
-			defaultNamespace: "blargle",
-			sqlQuery:         "SELECT * FROM deployments",
-			expectedOutput: `NAMESPACE   NAME              AGE
-blargle     fake-deployment   <unknown>
-`,
-			expectedError: "",
-		},
-		{
-			name: "Query for specific type meta columns using JSON notation",
-			setupFakes: func(fakeClientSet *fake.Clientset) {
-				_, err := fakeClientSet.CoreV1().Pods("kube-system").Create(
-					context.TODO(),
-					&v1.Pod{
-						TypeMeta: metav1.TypeMeta{
-							Kind:       "pods",
-							APIVersion: "v1",
-						},
-						ObjectMeta: metav1.ObjectMeta{
-							Namespace: "kube-system",
-							Name:      "kube-apiserver-kind-control-plane",
-						},
-					},
-					metav1.CreateOptions{},
-				)
+					header := http.Header{}
+					header.Set("Content-Type", runtime.ContentTypeJSON)
 
-				if err != nil {
-					panic(err.Error())
-				}
-			},
-			defaultNamespace: "",
-			sqlQuery:         "SELECT .kind, .apiVersion FROM pods WHERE name='kube-apiserver-kind-control-plane' AND namespace='kube-system'",
-			expectedOutput: `.kind   .apiVersion
-pods    v1
-`,
-			expectedError: "",
-		},
-		{
-			name: "Query for specific type meta columns using supported aliases",
-			setupFakes: func(fakeClientSet *fake.Clientset) {
-				_, err := fakeClientSet.CoreV1().Pods("kube-system").Create(
-					context.TODO(),
-					&v1.Pod{
-						TypeMeta: metav1.TypeMeta{
-							Kind:       "pods",
-							APIVersion: "v1",
-						},
-						ObjectMeta: metav1.ObjectMeta{
-							Namespace: "kube-system",
-							Name:      "kube-apiserver-kind-control-plane",
-						},
-					},
-					metav1.CreateOptions{},
-				)
-
-				if err != nil {
-					panic(err.Error())
-				}
-			},
-			defaultNamespace: "",
-			sqlQuery:         "SELECT kind, apiVersion FROM pods WHERE name='kube-apiserver-kind-control-plane' AND namespace='kube-system'",
-			expectedOutput: `kind   apiVersion
-pods   v1
-`,
-			expectedError: "",
-		},
-		{
-			name: "Query for specific object meta columns using JSON notation",
-			setupFakes: func(fakeClientSet *fake.Clientset) {
-				_, err := fakeClientSet.CoreV1().Pods("kube-system").Create(
-					context.TODO(),
-					&v1.Pod{
-						TypeMeta: metav1.TypeMeta{
-							Kind:       "pods",
-							APIVersion: "v1",
-						},
-						ObjectMeta: metav1.ObjectMeta{
-							Namespace: "kube-system",
-							Name:      "kube-apiserver-kind-control-plane",
-						},
-					},
-					metav1.CreateOptions{},
-				)
-
-				if err != nil {
-					panic(err.Error())
-				}
-			},
-			defaultNamespace: "",
-			sqlQuery:         "SELECT .metadata.name, .metadata.namespace FROM pods WHERE name='kube-apiserver-kind-control-plane' AND namespace='kube-system'",
-			expectedOutput: `.metadata.name                      .metadata.namespace
-kube-apiserver-kind-control-plane   kube-system
-`,
-			expectedError: "",
-		},
-		{
-			name: "Query for specific object meta columns using supported aliases",
-			setupFakes: func(fakeClientSet *fake.Clientset) {
-				_, err := fakeClientSet.CoreV1().Pods("kube-system").Create(
-					context.TODO(),
-					&v1.Pod{
-						TypeMeta: metav1.TypeMeta{
-							Kind:       "pods",
-							APIVersion: "v1",
-						},
-						ObjectMeta: metav1.ObjectMeta{
-							Annotations: map[string]string{
-								"blargle": "flargle",
-								"foo":     "bar",
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Header:     header,
+						Body: body(v1.SchemeGroupVersion, &v1.PodList{
+							Items: []v1.Pod{
+								{
+									ObjectMeta: metav1.ObjectMeta{
+										Name:      "nginx",
+										Namespace: "default",
+									},
+								},
+								{
+									ObjectMeta: metav1.ObjectMeta{
+										Name:      "nginx-2",
+										Namespace: "default",
+									},
+								},
 							},
-							CreationTimestamp: creationTimestamp,
-							Finalizers: []string{
-								"blargle",
-								"flargle",
-							},
-							GenerateName: "blargle-flargle-",
-							Labels: map[string]string{
-								"label1": "value1",
-								"label2": "value2",
-							},
-							Namespace: "kube-system",
-							Name:      "kube-apiserver-kind-control-plane",
-						},
-					},
-					metav1.CreateOptions{},
-				)
-
-				if err != nil {
-					panic(err.Error())
-				}
+						}),
+					}, nil
+				}),
 			},
-			defaultNamespace: "",
-			sqlQuery:         "SELECT annotations, creationTimestamp, finalizers, generateName, labels, name, namespace FROM pods WHERE name='kube-apiserver-kind-control-plane' AND namespace='kube-system'",
-			expectedOutput: ".metadata.annotations          .metadata.creationTimestamp                           .metadata.finalizers   .metadata.generateName   .metadata.labels                   .metadata.name                      .metadata.namespace\n" +
-				"map[blargle:flargle foo:bar]   " + creationTimestamp.String() + "   [blargle flargle]      blargle-flargle-         map[label1:value1 label2:value2]   kube-apiserver-kind-control-plane   kube-system\n",
-			expectedError: "",
+			defaultNamespace: "default",
+			sqlQuery:         "SELECT * FROM pods",
+			expectedOutput: `NAMESPACE   NAME      AGE
+default     nginx     <unknown>
+default     nginx-2   <unknown>
+`,
 		},
 		{
-			name: "Query for missing columns",
-			setupFakes: func(fakeClientSet *fake.Clientset) {
-				_, err := fakeClientSet.CoreV1().Pods("kube-system").Create(
-					context.TODO(),
-					&v1.Pod{
-						TypeMeta: metav1.TypeMeta{
-							Kind:       "pods",
-							APIVersion: "v1",
-						},
-						ObjectMeta: metav1.ObjectMeta{
-							Namespace: "kube-system",
-							Name:      "kube-apiserver-kind-control-plane",
-						},
-					},
-					metav1.CreateOptions{},
-				)
+			name: "Query for all objects in a specific namespace",
+			restClient: &clientFake.RESTClient{
+				GroupVersion:         v1.SchemeGroupVersion,
+				NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
+				Client: clientFake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
+					if req.URL.Path != fmt.Sprintf("/namespaces/foo/pods") {
+						return &http.Response{
+							StatusCode: http.StatusNotFound,
+						}, nil
+					}
 
-				if err != nil {
-					panic(err.Error())
-				}
+					header := http.Header{}
+					header.Set("Content-Type", runtime.ContentTypeJSON)
+
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Header:     header,
+						Body: body(v1.SchemeGroupVersion, &v1.PodList{
+							Items: []v1.Pod{
+								{
+									ObjectMeta: metav1.ObjectMeta{
+										Name:      "nginx",
+										Namespace: "foo",
+									},
+								},
+								{
+									ObjectMeta: metav1.ObjectMeta{
+										Name:      "nginx-2",
+										Namespace: "foo",
+									},
+								},
+							},
+						}),
+					}, nil
+				}),
 			},
-			defaultNamespace: "",
-			sqlQuery:         "SELECT .kind, .apiVersion, .blargle, .flargle FROM pods WHERE name='kube-apiserver-kind-control-plane' AND namespace='kube-system'",
-			expectedOutput: `.kind   .apiVersion   .blargle   .flargle
-pods    v1            <none>     <none>
+			defaultNamespace: "default",
+			sqlQuery:         "SELECT * FROM pods WHERE namespace='foo'",
+			expectedOutput: `NAMESPACE   NAME      AGE
+foo         nginx     <unknown>
+foo         nginx-2   <unknown>
 `,
-			expectedError: "",
+		},
+		{
+			name: "Query for a specific object in the default namespace",
+			restClient: &clientFake.RESTClient{
+				GroupVersion:         v1.SchemeGroupVersion,
+				NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
+				Client: clientFake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
+					if req.URL.Path != fmt.Sprintf("/namespaces/default/pods/nginx") {
+						return &http.Response{
+							StatusCode: http.StatusNotFound,
+						}, nil
+					}
+
+					header := http.Header{}
+					header.Set("Content-Type", runtime.ContentTypeJSON)
+
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Header:     header,
+						Body: body(v1.SchemeGroupVersion, &v1.Pod{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "nginx",
+								Namespace: "default",
+							},
+						}),
+					}, nil
+				}),
+			},
+			defaultNamespace: "default",
+			sqlQuery:         "SELECT * FROM pods WHERE name='nginx'",
+			expectedOutput: `NAMESPACE   NAME    AGE
+default     nginx   <unknown>
+`,
+		},
+		{
+			name: "Query for a specific object in a specific namespace",
+			restClient: &clientFake.RESTClient{
+				GroupVersion:         v1.SchemeGroupVersion,
+				NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
+				Client: clientFake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
+					if req.URL.Path != fmt.Sprintf("/namespaces/foo/pods/nginx") {
+						return &http.Response{
+							StatusCode: http.StatusNotFound,
+						}, nil
+					}
+
+					header := http.Header{}
+					header.Set("Content-Type", runtime.ContentTypeJSON)
+
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Header:     header,
+						Body: body(v1.SchemeGroupVersion, &v1.Pod{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "nginx",
+								Namespace: "foo",
+							},
+						}),
+					}, nil
+				}),
+			},
+			defaultNamespace: "default",
+			sqlQuery:         "SELECT * FROM pods WHERE name='nginx' AND namespace='foo'",
+			expectedOutput: `NAMESPACE   NAME    AGE
+foo         nginx   <unknown>
+`,
 		},
 
-		// TODO(evan) Change RHS to be a singly-quoted string, boolean, or numeric value
+		// TODO(evan) Query for a different kind of namespace-scoped object
+
+		// TODO(evan) Query for a cluster-scoped object
+
+		// TODO(evan) Query for specific type meta columns using JSON notation
+
+		// TODO(evan) Query for specific type meta columns using supported aliases
+
+		// TODO(evan) Query for specific object meta columns using JSON notation
+
+		// TODO(evan) Query for specific object meta columns using supported aliases
+
+		// TODO(evan) Query for missing columns
+
+		// TODO(evan) Query for objects in all namespaces
+
+		// TODO(evan) Change RHS to allow a singly-quoted string, boolean, or numeric value
 
 		// TODO(evan) Allow comparison operators: <>, !=, >, <, >=, <=
 
@@ -352,6 +284,8 @@ pods    v1            <none>     <none>
 
 		// TODO(evan) Allow JOIN
 
+		// TODO(evan) Allow cross join by selecting from multiple tables (cartesian product)
+
 		// TODO(evan) Allow INNER JOIN
 
 		// TODO(evan) Allow LEFT (OUTER) JOIN
@@ -368,12 +302,24 @@ pods    v1            <none>     <none>
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			fakeClientSet := fake.NewSimpleClientset()
-
-			c.setupFakes(fakeClientSet)
-
 			streams, _, outBuf, errBuf := genericclioptions.NewTestIOStreams()
-			queryCmd := Create(streams, fakeClientSet, c.defaultNamespace)
+
+			fakeClientFn := resource.FakeClientFunc(func(version schema.GroupVersion) (resource.RESTClient, error) {
+				return c.restClient, nil
+			})
+
+			restMapper := resource.RESTMapperFunc(func() (meta.RESTMapper, error) {
+				return testrestmapper.TestOnlyStaticRESTMapper(scheme.Scheme), nil
+			})
+
+			categoryExpander := resource.CategoryExpanderFunc(func() (restmapper.CategoryExpander, error) {
+				return resource.FakeCategoryExpander, nil
+			})
+
+			fakeBuilder := resource.NewFakeBuilder(fakeClientFn, restMapper, categoryExpander)
+
+			queryCmd := Create(streams, fakeBuilder, c.defaultNamespace)
+
 			rc := queryCmd.Run(c.sqlQuery)
 
 			assert.Equal(t, c.returnCode, rc)
@@ -381,4 +327,16 @@ pods    v1            <none>     <none>
 			assert.Equal(t, c.expectedError, errBuf.String())
 		})
 	}
+}
+
+func body(groupVersion schema.GroupVersion, obj runtime.Object) io.ReadCloser {
+	return ioutil.NopCloser(bytes.NewReader(encode(groupVersion, obj)))
+}
+
+func encode(groupVersion schema.GroupVersion, obj runtime.Object) []byte {
+	legacyCodec := scheme.Codecs.LegacyCodec(groupVersion)
+	decoder := scheme.Codecs.UniversalDecoder(groupVersion)
+	codec := scheme.Codecs.CodecForVersions(legacyCodec, decoder, groupVersion, groupVersion)
+	result := runtime.EncodeOrDie(codec, obj)
+	return []byte(result)
 }
