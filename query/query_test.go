@@ -9,7 +9,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/api/meta/testrestmapper"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -68,7 +70,7 @@ func TestQueryFunction(t *testing.T) {
 			},
 			defaultNamespace: "default",
 			sqlQuery:         "SELECT * FROM pods where name='foo'",
-			expectedOutput:   "NAMESPACE   NAME   AGE\n",
+			expectedOutput:   "NAME   AGE\n",
 			expectedError:    "the server could not find the requested resource (get pods foo)\n",
 		},
 		{
@@ -110,9 +112,9 @@ func TestQueryFunction(t *testing.T) {
 			},
 			defaultNamespace: "default",
 			sqlQuery:         "SELECT * FROM pods",
-			expectedOutput: `NAMESPACE   NAME      AGE
-default     nginx     <unknown>
-default     nginx-2   <unknown>
+			expectedOutput: `NAME      AGE
+nginx     <unknown>
+nginx-2   <unknown>
 `,
 		},
 		{
@@ -154,9 +156,9 @@ default     nginx-2   <unknown>
 			},
 			defaultNamespace: "default",
 			sqlQuery:         "SELECT * FROM pods WHERE namespace='foo'",
-			expectedOutput: `NAMESPACE   NAME      AGE
-foo         nginx     <unknown>
-foo         nginx-2   <unknown>
+			expectedOutput: `NAME      AGE
+nginx     <unknown>
+nginx-2   <unknown>
 `,
 		},
 		{
@@ -188,8 +190,8 @@ foo         nginx-2   <unknown>
 			},
 			defaultNamespace: "default",
 			sqlQuery:         "SELECT * FROM pods WHERE name='nginx'",
-			expectedOutput: `NAMESPACE   NAME    AGE
-default     nginx   <unknown>
+			expectedOutput: `NAME    AGE
+nginx   <unknown>
 `,
 		},
 		{
@@ -221,14 +223,74 @@ default     nginx   <unknown>
 			},
 			defaultNamespace: "default",
 			sqlQuery:         "SELECT * FROM pods WHERE name='nginx' AND namespace='foo'",
-			expectedOutput: `NAMESPACE   NAME    AGE
-foo         nginx   <unknown>
+			expectedOutput: `NAME    AGE
+nginx   <unknown>
 `,
 		},
+		{
+			name: "Query for a different kind of namespace-scoped object",
+			restClient: &clientFake.RESTClient{
+				GroupVersion:         appsv1.SchemeGroupVersion,
+				NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
+				Client: clientFake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
+					if req.URL.Path != fmt.Sprintf("/namespaces/foo/deployments/nginx") {
+						return &http.Response{
+							StatusCode: http.StatusNotFound,
+						}, nil
+					}
 
-		// TODO(evan) Query for a different kind of namespace-scoped object
+					header := http.Header{}
+					header.Set("Content-Type", runtime.ContentTypeJSON)
 
-		// TODO(evan) Query for a cluster-scoped object
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Header:     header,
+						Body: body(appsv1.SchemeGroupVersion, &appsv1.Deployment{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      "nginx",
+								Namespace: "foo",
+							},
+						}),
+					}, nil
+				}),
+			},
+			defaultNamespace: "default",
+			sqlQuery:         "SELECT * FROM deployments WHERE name='nginx' AND namespace='foo'",
+			expectedOutput: `NAME    AGE
+nginx   <unknown>
+`,
+		},
+		{
+			name: "Query for a cluster-scoped object",
+			restClient: &clientFake.RESTClient{
+				GroupVersion:         rbacv1.SchemeGroupVersion,
+				NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
+				Client: clientFake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
+					if req.URL.Path != fmt.Sprintf("/clusterroles/read-all") {
+						return &http.Response{
+							StatusCode: http.StatusNotFound,
+						}, nil
+					}
+
+					header := http.Header{}
+					header.Set("Content-Type", runtime.ContentTypeJSON)
+
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Header:     header,
+						Body: body(rbacv1.SchemeGroupVersion, &rbacv1.ClusterRole{
+							ObjectMeta: metav1.ObjectMeta{
+								Name: "read-all",
+							},
+						}),
+					}, nil
+				}),
+			},
+			sqlQuery: "SELECT * FROM clusterroles WHERE name='read-all'",
+			expectedOutput: `NAME       AGE
+read-all   <unknown>
+`,
+		},
 
 		// TODO(evan) Query for specific type meta columns using JSON notation
 

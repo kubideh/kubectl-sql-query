@@ -74,7 +74,7 @@ func TestCommandWithQueryString(t *testing.T) {
 		t.Run(strings.Join(c, " "), func(t *testing.T) {
 			out, err := exec.Command(c[0], c[1:]...).CombinedOutput()
 
-			const expectedOutput = "NAMESPACE   NAME   AGE\n"
+			const expectedOutput = "NAME   AGE\n"
 
 			assert.NoErrorf(t, err, "Failed to run %s", c)
 			assert.Equal(t, expectedOutput, string(out), "Unexpected output")

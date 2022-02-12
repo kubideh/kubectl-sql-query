@@ -109,9 +109,7 @@ func columnSpec(columns []string) (spec string) {
 }
 
 func createDefaultPrinter() printers.ResourcePrinter {
-	return printers.NewTablePrinter(printers.PrintOptions{
-		WithNamespace: true,
-	})
+	return printers.NewTablePrinter(printers.PrintOptions{})
 }
 
 func createCustomColumnsPrinter(columns []string) printers.ResourcePrinter {
