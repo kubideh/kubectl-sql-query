@@ -51,7 +51,7 @@ func (q *Query) find(listener *sql.ListenerImpl) runtime.Object {
 	}
 
 	builder := q.builder.
-		WithScheme(scheme.Scheme, scheme.Scheme.PrioritizedVersionsAllGroups()...).
+		Unstructured().
 		NamespaceParam(namespaceFrom(listener, q.defaultNamespace)).
 		DefaultNamespace().
 		ResourceTypeOrNameArgs(true, resourceTypeOrName).
