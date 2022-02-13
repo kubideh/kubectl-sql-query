@@ -34,11 +34,6 @@ func TestParser(t *testing.T) {
 			},
 		},
 		{
-			name:               "WHERE clause must have at least one condition",
-			query:              "SELECT * From pods WHERE",
-			expectedErrorCount: 1,
-		},
-		{
 			name:  "WHERE clause can have just one condition",
 			query: "SELECT * FROM pods WHERE namespace='default'",
 			expectedListener: ListenerImpl{
@@ -141,7 +136,7 @@ func TestParser(t *testing.T) {
 			var listener ListenerImpl
 			p := Create(&errorListener, c.query)
 
-			antlr.ParseTreeWalkerDefault.Walk(&listener, p.Query())
+			antlr.ParseTreeWalkerDefault.Walk(&listener, p.Parse())
 
 			assert.Equal(t, c.expectedErrorCount, errorListener.Count)
 
@@ -151,7 +146,6 @@ func TestParser(t *testing.T) {
 			}
 
 			listener.field = ""
-			listener.value = ""
 
 			assert.Equal(t, c.expectedListener, listener)
 		})

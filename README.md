@@ -29,7 +29,7 @@ kubectl sql query "SELECT * FROM pods WHERE name='kube-apiserver-kind-control-pl
 
 ## SQL Query
 
-See the [grammar](query/sql/SQLQuery.g4) for the supported syntax.
+A modified form of SQLite syntax is supported. The [grammar lexer](query/sql/SQLiteLexer.g4) and [grammar parser](query/sql/SQLiteParser.g4) was sourced from the [ANTLR grammars-v4](https://github.com/antlr/grammars-v4/tree/master/sql/sqlite).
 
 **Case-sensitivity:**
 

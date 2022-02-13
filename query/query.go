@@ -41,7 +41,7 @@ func (q *Query) Run(sqlQuery string) int {
 
 func (q *Query) parseQuery(errorListener *sql.ErrorListenerImpl, listener *sql.ListenerImpl, sqlQuery string) {
 	p := sql.Create(errorListener, sqlQuery)
-	antlr.ParseTreeWalkerDefault.Walk(listener, p.Query())
+	antlr.ParseTreeWalkerDefault.Walk(listener, p.Parse())
 }
 
 func (q *Query) find(listener *sql.ListenerImpl) runtime.Object {

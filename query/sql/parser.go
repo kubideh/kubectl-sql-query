@@ -1,6 +1,6 @@
 package sql
 
-//go:generate antlr -Dlanguage=Go -Werror -o parser SQLQuery.g4
+//go:generate antlr -Dlanguage=Go -Werror -o parser SQLiteLexer.g4 SQLiteParser.g4
 
 import (
 	"fmt"
@@ -26,50 +26,53 @@ func (el *ErrorListenerImpl) SyntaxError(recognizer antlr.Recognizer, offendingS
 
 var _ antlr.ErrorListener = &ErrorListenerImpl{}
 
-// ListenerImpl is a parser.SQLQueryListener, and holds all the
+// ListenerImpl is a parser.SQLiteParserListener, and holds all the
 // tokens parsed from the SQL query, which are needed to construct
 // a query against the Kubernetes API.
 type ListenerImpl struct {
-	parser.BaseSQLQueryListener
+	parser.BaseSQLiteParserListener
 	field                string
-	value                string
 	TableName            string
 	ProjectionColumns    []string
 	ComparisonPredicates map[string]string
 }
 
-// ExitColumn is called when production column is exited.
-func (l *ListenerImpl) ExitColumn(ctx *parser.ColumnContext) {
+// ExitResult_column is called when production result_column is exited.
+func (l *ListenerImpl) ExitResult_column(ctx *parser.Result_columnContext) {
+	if ctx.STAR() != nil {
+		return
+	}
+
 	l.ProjectionColumns = append(l.ProjectionColumns, ctx.GetText())
 }
 
-// ExitLhs is called when production lhs is exited.
-func (l *ListenerImpl) ExitLhs(ctx *parser.LhsContext) {
-	l.field = ctx.GetText()
-}
-
-// ExitTable is called when production table is exited.
-func (l *ListenerImpl) ExitTable(ctx *parser.TableContext) {
+// ExitTable_name is called when production table_name is exited.
+func (l *ListenerImpl) ExitTable_name(ctx *parser.Table_nameContext) {
 	l.TableName = ctx.GetText()
 }
 
-// EnterRhs is called when production rhs is entered.
-func (l *ListenerImpl) EnterRhs(ctx *parser.RhsContext) {
+// ExitColumn_name is called when production column_name is entered.
+func (l *ListenerImpl) ExitColumn_name(ctx *parser.Column_nameContext) {
+	l.field = ctx.GetText()
+}
+
+// ExitLiteral_value is called when production literal_value is entered.
+func (l *ListenerImpl) ExitLiteral_value(ctx *parser.Literal_valueContext) {
 	if l.ComparisonPredicates == nil {
 		l.ComparisonPredicates = make(map[string]string)
 	}
 
-	value := ctx.GetText()
+	value := ctx.STRING_LITERAL().GetText()
 	value = strings.TrimPrefix(value, "'")
 	value = strings.TrimRight(value, "'")
 
 	l.ComparisonPredicates[l.field] = value
 }
 
-var _ parser.SQLQueryListener = &ListenerImpl{}
+var _ parser.SQLiteParserListener = &ListenerImpl{}
 
-// Create returns a new SQLQueryParser for the given query string.
-func Create(errorListener *ErrorListenerImpl, query string) *parser.SQLQueryParser {
+// Create returns a new SQLiteParserParser for the given query string.
+func Create(errorListener *ErrorListenerImpl, query string) *parser.SQLiteParser {
 	inputStream := createInputStream(query)
 
 	lexer := createLexer(errorListener, inputStream)
@@ -83,19 +86,19 @@ func createInputStream(query string) *antlr.InputStream {
 	return antlr.NewInputStream(query)
 }
 
-func createLexer(errorListener *ErrorListenerImpl, inputStream *antlr.InputStream) (lexer *parser.SQLQueryLexer) {
-	lexer = parser.NewSQLQueryLexer(inputStream)
+func createLexer(errorListener *ErrorListenerImpl, inputStream *antlr.InputStream) (lexer *parser.SQLiteLexer) {
+	lexer = parser.NewSQLiteLexer(inputStream)
 	lexer.AddErrorListener(errorListener)
 
 	return
 }
 
-func createTokenStream(lexer *parser.SQLQueryLexer) *antlr.CommonTokenStream {
+func createTokenStream(lexer *parser.SQLiteLexer) *antlr.CommonTokenStream {
 	return antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel)
 }
 
-func createParser(errorListener *ErrorListenerImpl, tokenStream *antlr.CommonTokenStream) (queryParser *parser.SQLQueryParser) {
-	queryParser = parser.NewSQLQueryParser(tokenStream)
+func createParser(errorListener *ErrorListenerImpl, tokenStream *antlr.CommonTokenStream) (queryParser *parser.SQLiteParser) {
+	queryParser = parser.NewSQLiteParser(tokenStream)
 	queryParser.RemoveErrorListeners()
 	queryParser.AddErrorListener(errorListener)
 

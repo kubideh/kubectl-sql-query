@@ -38,7 +38,7 @@ func TestQueryFunction(t *testing.T) {
 	}{
 		{
 			name:          "Query fails to parse",
-			expectedError: "line 1:0 mismatched input '<EOF>' expecting SELECT\n",
+			expectedError: "line 1:0 mismatched input '<EOF>' expecting {ALTER_, ANALYZE_, ATTACH_, BEGIN_, COMMIT_, CREATE_, DEFAULT_, DELETE_, DETACH_, DROP_, END_, EXPLAIN_, INSERT_, PRAGMA_, REINDEX_, RELEASE_, REPLACE_, ROLLBACK_, SAVEPOINT_, SELECT_, UPDATE_, VACUUM_, VALUES_, WITH_}\n",
 			returnCode:    1,
 		},
 		{

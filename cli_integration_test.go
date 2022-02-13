@@ -53,7 +53,7 @@ func TestCommandWithError(t *testing.T) {
 	out, err := exec.Command("kubectl", "sql", "query", "").CombinedOutput()
 
 	assert.EqualError(t, err, "exit status 1", "Expected a failure")
-	assert.Equal(t, "line 1:0 mismatched input '<EOF>' expecting SELECT\n", string(out), "Unexpected output")
+	assert.Equal(t, "line 1:0 mismatched input '<EOF>' expecting {ALTER_, ANALYZE_, ATTACH_, BEGIN_, COMMIT_, CREATE_, DEFAULT_, DELETE_, DETACH_, DROP_, END_, EXPLAIN_, INSERT_, PRAGMA_, REINDEX_, RELEASE_, REPLACE_, ROLLBACK_, SAVEPOINT_, SELECT_, UPDATE_, VACUUM_, VALUES_, WITH_}\n", string(out), "Unexpected output")
 }
 
 func TestCommandWithQueryString(t *testing.T) {
