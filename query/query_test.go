@@ -481,6 +481,47 @@ map[blargle:flargle foo:bar]   0001-01-01 00:00:00 +0000 UTC   [finalizer1 final
 map[blargle:flargle foo:bar]   0001-01-01 00:00:00 +0000 UTC   [finalizer1 finalizer2]   nginx-                   map[blargle:flargle foo:bar]   nginx            default
 `,
 		},
+		{
+			name: "Query for missing columns",
+			restClient: &clientFake.RESTClient{
+				GroupVersion:         v1.SchemeGroupVersion,
+				NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
+				Client: clientFake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
+					if req.URL.Path != fmt.Sprintf("/namespaces/default/pods") {
+						return &http.Response{
+							StatusCode: http.StatusNotFound,
+						}, nil
+					}
+
+					header := http.Header{}
+					header.Set("Content-Type", runtime.ContentTypeJSON)
+
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Header:     header,
+						Body: body(v1.SchemeGroupVersion, &v1.PodList{
+							Items: []v1.Pod{
+								{
+									TypeMeta: metav1.TypeMeta{
+										APIVersion: "v1",
+										Kind:       "Pod",
+									},
+									ObjectMeta: metav1.ObjectMeta{
+										Name:      "nginx",
+										Namespace: "default",
+									},
+								},
+							},
+						}),
+					}, nil
+				}),
+			},
+			defaultNamespace: "default",
+			sqlQuery:         "SELECT namespace, .foo.bar, name, .blargle.flargle FROM pods",
+			expectedOutput: `.metadata.namespace   .foo.bar   .metadata.name   .blargle.flargle
+default               <none>     nginx            <none>
+`,
+		},
 	}
 
 	for _, c := range cases {
