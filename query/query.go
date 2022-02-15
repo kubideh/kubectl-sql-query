@@ -41,7 +41,7 @@ func (q *Query) Run(sqlQuery string) int {
 
 	results := q.find(&listener)
 
-	q.print(listener.ProjectionColumns, results)
+	q.print(listener.ProjectionColumns, listener.ColumnAliases, results)
 	return 0
 }
 
@@ -95,7 +95,7 @@ func createFilter(listener *sql.ListenerImpl, results *metav1.List) func(object 
 		}
 
 		for key, value := range listener.ComparisonPredicates {
-			path, err := get.RelaxedJSONPathExpression(columnFromAliases(key))
+			path, err := get.RelaxedJSONPathExpression(fieldFromAlias(key))
 
 			if err != nil {
 				panic(err.Error())
@@ -140,7 +140,7 @@ func createFilter(listener *sql.ListenerImpl, results *metav1.List) func(object 
 	}
 }
 
-var objectMetadataColumnAliases = map[string]string{
+var metadataFieldAliases = map[string]string{
 	"annotations":       ".metadata.annotations",
 	"creationTimestamp": ".metadata.creationTimestamp",
 	"finalizers":        ".metadata.finalizers",
@@ -150,30 +150,35 @@ var objectMetadataColumnAliases = map[string]string{
 	"namespace":         ".metadata.namespace",
 }
 
-func columnsFromAliases(columns []string) (result []string) {
+func fieldsFromAliases(columns []string) (result []string) {
 	for _, c := range columns {
-		result = append(result, columnFromAliases(c))
+		result = append(result, fieldFromAlias(c))
 	}
 
 	return
 }
 
-func columnFromAliases(alias string) (result string) {
+func fieldFromAlias(alias string) (result string) {
 	result = alias
 
-	if val, ok := objectMetadataColumnAliases[alias]; ok {
+	if val, ok := metadataFieldAliases[alias]; ok {
 		result = val
 	}
 
 	return
 }
 
-func columnSpec(columns []string) (spec string) {
+func printerColumnSpec(columns []string, aliases map[string]string) (spec string) {
 	for i, c := range columns {
+		name := c
+		if alias := aliases[c]; alias != "" {
+			name = alias
+		}
+
 		if i == 0 {
-			spec += fmt.Sprintf("%s:%s", toUpperWithUnderscores(c), c)
+			spec += fmt.Sprintf("%s:%s", toUpperWithUnderscores(name), c)
 		} else {
-			spec += fmt.Sprintf(",%s:%s", toUpperWithUnderscores(c), c)
+			spec += fmt.Sprintf(",%s:%s", toUpperWithUnderscores(name), c)
 		}
 	}
 
@@ -193,10 +198,10 @@ func toUpperWithUnderscores(s string) (result string) {
 	return
 }
 
-func createCustomColumnsPrinter(columns []string) printers.ResourcePrinter {
-	aliasedColumns := columnsFromAliases(columns)
+func createCustomColumnsPrinter(columns []string, aliases map[string]string) printers.ResourcePrinter {
+	aliasedColumns := fieldsFromAliases(columns)
 
-	spec := columnSpec(aliasedColumns)
+	spec := printerColumnSpec(aliasedColumns, aliases)
 
 	decoder := scheme.Codecs.UniversalDecoder(scheme.Scheme.PrioritizedVersionsAllGroups()...)
 
@@ -209,18 +214,18 @@ func createCustomColumnsPrinter(columns []string) printers.ResourcePrinter {
 	return printer
 }
 
-func createPrinter(columns []string) (printer printers.ResourcePrinter) {
+func createPrinter(columns []string, aliases map[string]string) (printer printers.ResourcePrinter) {
 	printer = printers.NewTablePrinter(printers.PrintOptions{})
 
 	if len(columns) > 0 {
-		printer = createCustomColumnsPrinter(columns)
+		printer = createCustomColumnsPrinter(columns, aliases)
 	}
 
 	return
 }
 
-func (q *Query) print(columns []string, results runtime.Object) {
-	printer := createPrinter(columns)
+func (q *Query) print(columns []string, aliases map[string]string, results runtime.Object) {
+	printer := createPrinter(columns, aliases)
 
 	if err := printer.PrintObj(results, q.streams.Out); err != nil {
 		panic(err.Error())

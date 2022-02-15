@@ -32,9 +32,23 @@ var _ antlr.ErrorListener = &ErrorListenerImpl{}
 type ListenerImpl struct {
 	parser.BaseSQLiteParserListener
 	field                string
+	stack                []string
 	TableName            string
 	ProjectionColumns    []string
 	ComparisonPredicates map[string]interface{}
+	ColumnAliases        map[string]string
+}
+
+// ExitColumn_alias is called when production column_alias is exited.
+func (l *ListenerImpl) ExitColumn_alias(ctx *parser.Column_aliasContext) {
+	l.stack = append(l.stack, ctx.GetText())
+}
+
+// ExitColumn_name is called when production column_name is exited.
+func (l *ListenerImpl) ExitColumn_name(ctx *parser.Column_nameContext) {
+	l.stack = append(l.stack, ctx.GetText())
+
+	l.field = ctx.GetText()
 }
 
 // ExitResult_column is called when production result_column is exited.
@@ -43,7 +57,26 @@ func (l *ListenerImpl) ExitResult_column(ctx *parser.Result_columnContext) {
 		return
 	}
 
-	l.ProjectionColumns = append(l.ProjectionColumns, ctx.GetText())
+	if len(l.stack) == 1 {
+		n := top(l.stack)
+		name := l.stack[n]
+		l.stack = pop(l.stack)
+		l.ProjectionColumns = append(l.ProjectionColumns, name)
+	} else {
+		n := top(l.stack)
+		alias := l.stack[n]
+		l.stack = pop(l.stack)
+
+		n = top(l.stack)
+		name := l.stack[n]
+		l.stack = pop(l.stack)
+
+		l.ProjectionColumns = append(l.ProjectionColumns, name)
+		if l.ColumnAliases == nil {
+			l.ColumnAliases = make(map[string]string)
+		}
+		l.ColumnAliases[name] = alias
+	}
 }
 
 // ExitTable_name is called when production table_name is exited.
@@ -51,12 +84,7 @@ func (l *ListenerImpl) ExitTable_name(ctx *parser.Table_nameContext) {
 	l.TableName = ctx.GetText()
 }
 
-// ExitColumn_name is called when production column_name is entered.
-func (l *ListenerImpl) ExitColumn_name(ctx *parser.Column_nameContext) {
-	l.field = ctx.GetText()
-}
-
-// ExitLiteral_value is called when production literal_value is entered.
+// ExitLiteral_value is called when production literal_value is exited.
 func (l *ListenerImpl) ExitLiteral_value(ctx *parser.Literal_valueContext) {
 	if l.ComparisonPredicates == nil {
 		l.ComparisonPredicates = make(map[string]interface{})
@@ -78,6 +106,14 @@ func (l *ListenerImpl) ExitLiteral_value(ctx *parser.Literal_valueContext) {
 	} else if ctx.FALSE_() != nil {
 		l.ComparisonPredicates[l.field] = false
 	}
+}
+
+func top(s []string) int {
+	return len(s) - 1
+}
+
+func pop(s []string) []string {
+	return s[:top(s)]
 }
 
 var _ parser.SQLiteParserListener = &ListenerImpl{}

@@ -566,6 +566,43 @@ nginx-2          42
 nginx-2          true                 <none>
 `,
 		},
+		{
+			name: "Query using SQL column aliases",
+			restClient: &clientFake.RESTClient{
+				GroupVersion:         v1.SchemeGroupVersion,
+				NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
+				Client: clientFake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
+					assert.Equal(t, "/namespaces/default/pods", req.URL.Path)
+
+					header := http.Header{}
+					header.Set("Content-Type", runtime.ContentTypeJSON)
+
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Header:     header,
+						Body: body(v1.SchemeGroupVersion, &v1.PodList{
+							Items: []v1.Pod{
+								{
+									TypeMeta: metav1.TypeMeta{
+										APIVersion: "v1",
+										Kind:       "Pod",
+									},
+									ObjectMeta: metav1.ObjectMeta{
+										Name:      "nginx",
+										Namespace: "default",
+									},
+								},
+							},
+						}),
+					}, nil
+				}),
+			},
+			defaultNamespace: "default",
+			sqlQuery:         "SELECT apiVersion AS ver, kind AS k8s_type FROM pods",
+			expectedOutput: `VER   K8S_TYPE
+v1    Pod
+`,
+		},
 	}
 
 	for _, c := range cases {

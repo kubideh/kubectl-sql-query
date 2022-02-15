@@ -149,6 +149,19 @@ func TestParser(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:  "SELECT clause can declare column aliases",
+			query: "SELECT name AS pod_name FROM pods",
+			expectedListener: ListenerImpl{
+				TableName: "pods",
+				ProjectionColumns: []string{
+					"name",
+				},
+				ColumnAliases: map[string]string{
+					"name": "pod_name",
+				},
+			},
+		},
 	}
 
 	for _, c := range cases {
@@ -167,6 +180,7 @@ func TestParser(t *testing.T) {
 			}
 
 			listener.field = ""
+			listener.stack = nil
 
 			assert.Equal(t, c.expectedListener, listener)
 		})
