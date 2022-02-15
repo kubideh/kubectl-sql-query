@@ -20,4 +20,9 @@
 # Krew folder
 .krew/
 
+# Goreleaser
 dist/
+
+# ANTLR4 in the IDE
+gen/
+
