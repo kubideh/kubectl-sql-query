@@ -95,7 +95,7 @@ func TestParser(t *testing.T) {
 			query: "SELECT blargle FROM deployments",
 			expectedListener: ListenerImpl{
 				TableName: "deployments",
-				ProjectionColumns: []string{
+				Columns: []string{
 					"blargle",
 				},
 			},
@@ -105,7 +105,7 @@ func TestParser(t *testing.T) {
 			query: "SELECT blargle, flargle, blargle FROM deployments",
 			expectedListener: ListenerImpl{
 				TableName: "deployments",
-				ProjectionColumns: []string{
+				Columns: []string{
 					"blargle",
 					"flargle",
 					"blargle",
@@ -117,7 +117,7 @@ func TestParser(t *testing.T) {
 			query: "SELECT .foo.bar.blargleFlargle, .yolo FROM deployments",
 			expectedListener: ListenerImpl{
 				TableName: "deployments",
-				ProjectionColumns: []string{
+				Columns: []string{
 					".foo.bar.blargleFlargle",
 					".yolo",
 				},
@@ -154,7 +154,7 @@ func TestParser(t *testing.T) {
 			query: "SELECT name AS pod_name FROM pods",
 			expectedListener: ListenerImpl{
 				TableName: "pods",
-				ProjectionColumns: []string{
+				Columns: []string{
 					"name",
 				},
 				ColumnAliases: map[string]string{

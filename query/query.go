@@ -41,7 +41,7 @@ func (q *Query) Run(sqlQuery string) int {
 
 	results := q.find(&listener)
 
-	q.print(listener.ProjectionColumns, listener.ColumnAliases, results)
+	q.print(listener.Columns, listener.ColumnAliases, results)
 	return 0
 }
 
@@ -168,21 +168,27 @@ func fieldFromAlias(alias string) (result string) {
 	return
 }
 
-func printerColumnSpec(columns []string, aliases map[string]string) (spec string) {
-	for i, c := range columns {
-		name := c
-		if alias := aliases[c]; alias != "" {
-			name = alias
+func printerColumnSpec(fields []string, columnAliases map[string]string) (spec string) {
+	for i, f := range fields {
+		if i != 0 {
+			spec += ","
 		}
 
-		if i == 0 {
-			spec += fmt.Sprintf("%s:%s", toUpperWithUnderscores(name), c)
-		} else {
-			spec += fmt.Sprintf(",%s:%s", toUpperWithUnderscores(name), c)
-		}
+		column := columnFromField(f, columnAliases)
+		spec += fmt.Sprintf("%s:%s", toUpperWithUnderscores(column), f)
 	}
 
 	return
+}
+
+func columnFromField(f string, columnAliases map[string]string) (result string) {
+	result = f
+
+	if alias := columnAliases[f]; alias != "" {
+		result = alias
+	}
+
+	return result
 }
 
 func toUpperWithUnderscores(s string) (result string) {
@@ -198,10 +204,10 @@ func toUpperWithUnderscores(s string) (result string) {
 	return
 }
 
-func createCustomColumnsPrinter(columns []string, aliases map[string]string) printers.ResourcePrinter {
-	aliasedColumns := fieldsFromAliases(columns)
+func createCustomColumnsPrinter(columns []string, columnAliases map[string]string) printers.ResourcePrinter {
+	fields := fieldsFromAliases(columns)
 
-	spec := printerColumnSpec(aliasedColumns, aliases)
+	spec := printerColumnSpec(fields, columnAliases)
 
 	decoder := scheme.Codecs.UniversalDecoder(scheme.Scheme.PrioritizedVersionsAllGroups()...)
 
@@ -214,18 +220,18 @@ func createCustomColumnsPrinter(columns []string, aliases map[string]string) pri
 	return printer
 }
 
-func createPrinter(columns []string, aliases map[string]string) (printer printers.ResourcePrinter) {
+func createPrinter(columns []string, columnAliases map[string]string) (printer printers.ResourcePrinter) {
 	printer = printers.NewTablePrinter(printers.PrintOptions{})
 
 	if len(columns) > 0 {
-		printer = createCustomColumnsPrinter(columns, aliases)
+		printer = createCustomColumnsPrinter(columns, columnAliases)
 	}
 
 	return
 }
 
-func (q *Query) print(columns []string, aliases map[string]string, results runtime.Object) {
-	printer := createPrinter(columns, aliases)
+func (q *Query) print(columns []string, columnAliases map[string]string, results runtime.Object) {
+	printer := createPrinter(columns, columnAliases)
 
 	if err := printer.PrintObj(results, q.streams.Out); err != nil {
 		panic(err.Error())

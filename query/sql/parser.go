@@ -34,7 +34,7 @@ type ListenerImpl struct {
 	field                string
 	stack                []string
 	TableName            string
-	ProjectionColumns    []string
+	Columns              []string
 	ComparisonPredicates map[string]interface{}
 	ColumnAliases        map[string]string
 }
@@ -57,26 +57,20 @@ func (l *ListenerImpl) ExitResult_column(ctx *parser.Result_columnContext) {
 		return
 	}
 
-	if len(l.stack) == 1 {
-		n := top(l.stack)
-		name := l.stack[n]
-		l.stack = pop(l.stack)
-		l.ProjectionColumns = append(l.ProjectionColumns, name)
-	} else {
-		n := top(l.stack)
-		alias := l.stack[n]
-		l.stack = pop(l.stack)
+	var name string
+	name, l.stack = take(l.stack)
 
-		n = top(l.stack)
-		name := l.stack[n]
-		l.stack = pop(l.stack)
+	if len(l.stack) > 0 {
+		alias := name
+		name, l.stack = take(l.stack)
 
-		l.ProjectionColumns = append(l.ProjectionColumns, name)
 		if l.ColumnAliases == nil {
 			l.ColumnAliases = make(map[string]string)
 		}
 		l.ColumnAliases[name] = alias
 	}
+
+	l.Columns = append(l.Columns, name)
 }
 
 // ExitTable_name is called when production table_name is exited.
@@ -114,6 +108,13 @@ func top(s []string) int {
 
 func pop(s []string) []string {
 	return s[:top(s)]
+}
+
+func take(s []string) (value string, result []string) {
+	n := top(s)
+	value = s[n]
+	result = pop(s)
+	return
 }
 
 var _ parser.SQLiteParserListener = &ListenerImpl{}
