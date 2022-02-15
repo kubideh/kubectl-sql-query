@@ -38,7 +38,7 @@ func TestParser(t *testing.T) {
 			query: "SELECT * FROM pods WHERE namespace='default'",
 			expectedListener: ListenerImpl{
 				TableName: "pods",
-				ComparisonPredicates: map[string]string{
+				ComparisonPredicates: map[string]interface{}{
 					"namespace": "default",
 				},
 			},
@@ -48,7 +48,7 @@ func TestParser(t *testing.T) {
 			query: "SELECT * FROM pods Where namespace='default'",
 			expectedListener: ListenerImpl{
 				TableName: "pods",
-				ComparisonPredicates: map[string]string{
+				ComparisonPredicates: map[string]interface{}{
 					"namespace": "default",
 				},
 			},
@@ -63,7 +63,7 @@ func TestParser(t *testing.T) {
 			query: "SELECT * FROM pods WHERE name='blargle' AND namespace='flargle'",
 			expectedListener: ListenerImpl{
 				TableName: "pods",
-				ComparisonPredicates: map[string]string{
+				ComparisonPredicates: map[string]interface{}{
 					"name":      "blargle",
 					"namespace": "flargle",
 				},
@@ -74,7 +74,7 @@ func TestParser(t *testing.T) {
 			query: "SELECT * FROM pods WHERE name='blargle' And namespace='flargle'",
 			expectedListener: ListenerImpl{
 				TableName: "pods",
-				ComparisonPredicates: map[string]string{
+				ComparisonPredicates: map[string]interface{}{
 					"name":      "blargle",
 					"namespace": "flargle",
 				},
@@ -127,6 +127,27 @@ func TestParser(t *testing.T) {
 			name:               "SELECT with empty columns is not allowed",
 			query:              "SELECT blargle,, blargle FROM deployments",
 			expectedErrorCount: 1,
+		},
+		{
+			name:  "WHERE clause can have numeric predicates",
+			query: "SELECT * FROM pods WHERE blargle=42",
+			expectedListener: ListenerImpl{
+				TableName: "pods",
+				ComparisonPredicates: map[string]interface{}{
+					"blargle": int64(42),
+				},
+			},
+		},
+		{
+			name:  "WHERE clause can have boolean predicates",
+			query: "SELECT * FROM pods WHERE blargle=True AND flargle=False",
+			expectedListener: ListenerImpl{
+				TableName: "pods",
+				ComparisonPredicates: map[string]interface{}{
+					"blargle": true,
+					"flargle": false,
+				},
+			},
 		},
 	}
 

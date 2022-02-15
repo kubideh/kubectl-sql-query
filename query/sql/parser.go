@@ -34,7 +34,7 @@ type ListenerImpl struct {
 	field                string
 	TableName            string
 	ProjectionColumns    []string
-	ComparisonPredicates map[string]string
+	ComparisonPredicates map[string]interface{}
 }
 
 // ExitResult_column is called when production result_column is exited.
@@ -59,14 +59,25 @@ func (l *ListenerImpl) ExitColumn_name(ctx *parser.Column_nameContext) {
 // ExitLiteral_value is called when production literal_value is entered.
 func (l *ListenerImpl) ExitLiteral_value(ctx *parser.Literal_valueContext) {
 	if l.ComparisonPredicates == nil {
-		l.ComparisonPredicates = make(map[string]string)
+		l.ComparisonPredicates = make(map[string]interface{})
 	}
 
-	value := ctx.STRING_LITERAL().GetText()
-	value = strings.TrimPrefix(value, "'")
-	value = strings.TrimRight(value, "'")
-
-	l.ComparisonPredicates[l.field] = value
+	if ctx.STRING_LITERAL() != nil {
+		value := ctx.STRING_LITERAL().GetText()
+		value = strings.TrimPrefix(value, "'")
+		value = strings.TrimRight(value, "'")
+		l.ComparisonPredicates[l.field] = value
+	} else if ctx.NUMERIC_LITERAL() != nil {
+		value, err := strconv.ParseInt(ctx.NUMERIC_LITERAL().GetText(), 10, 64)
+		if err != nil {
+			panic(err.Error())
+		}
+		l.ComparisonPredicates[l.field] = value
+	} else if ctx.TRUE_() != nil {
+		l.ComparisonPredicates[l.field] = true
+	} else if ctx.FALSE_() != nil {
+		l.ComparisonPredicates[l.field] = false
+	}
 }
 
 var _ parser.SQLiteParserListener = &ListenerImpl{}

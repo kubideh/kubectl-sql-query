@@ -12,6 +12,8 @@ require (
 	k8s.io/kubectl v0.23.3
 )
 
+replace k8s.io/kubectl => github.com/kubideh/kubectl v0.0.0-20220215000954-e6522c139b1a
+
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/MakeNowJust/heredoc v0.0.0-20170808103936-bb23615498cd // indirect

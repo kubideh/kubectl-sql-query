@@ -25,8 +25,6 @@ import (
 )
 
 func TestQueryFunction(t *testing.T) {
-	//creationTimestamp := metav1.NewTime(time.Now())
-
 	cases := []struct {
 		name             string
 		restClient       resource.RESTClient
@@ -71,7 +69,6 @@ func TestQueryFunction(t *testing.T) {
 			defaultNamespace: "default",
 			sqlQuery:         "SELECT * FROM pods where name='foo'",
 			expectedOutput:   "NAME   AGE\n",
-			expectedError:    "the server could not find the requested resource (get pods foo)\n",
 		},
 		{
 			name: "Query for all objects in the default namespace",
@@ -79,11 +76,7 @@ func TestQueryFunction(t *testing.T) {
 				GroupVersion:         v1.SchemeGroupVersion,
 				NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
 				Client: clientFake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
-					if req.URL.Path != fmt.Sprintf("/namespaces/default/pods") {
-						return &http.Response{
-							StatusCode: http.StatusNotFound,
-						}, nil
-					}
+					assert.Equal(t, "/namespaces/default/pods", req.URL.Path)
 
 					header := http.Header{}
 					header.Set("Content-Type", runtime.ContentTypeJSON)
@@ -123,11 +116,7 @@ nginx-2   <unknown>
 				GroupVersion:         v1.SchemeGroupVersion,
 				NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
 				Client: clientFake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
-					if req.URL.Path != fmt.Sprintf("/namespaces/foo/pods") {
-						return &http.Response{
-							StatusCode: http.StatusNotFound,
-						}, nil
-					}
+					assert.Equal(t, "/namespaces/foo/pods", req.URL.Path)
 
 					header := http.Header{}
 					header.Set("Content-Type", runtime.ContentTypeJSON)
@@ -167,11 +156,7 @@ nginx-2   <unknown>
 				GroupVersion:         v1.SchemeGroupVersion,
 				NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
 				Client: clientFake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
-					if req.URL.Path != fmt.Sprintf("/namespaces/default/pods/nginx") {
-						return &http.Response{
-							StatusCode: http.StatusNotFound,
-						}, nil
-					}
+					assert.Equal(t, "/namespaces/default/pods/nginx", req.URL.Path)
 
 					header := http.Header{}
 					header.Set("Content-Type", runtime.ContentTypeJSON)
@@ -200,11 +185,7 @@ nginx   <unknown>
 				GroupVersion:         v1.SchemeGroupVersion,
 				NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
 				Client: clientFake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
-					if req.URL.Path != fmt.Sprintf("/namespaces/foo/pods/nginx") {
-						return &http.Response{
-							StatusCode: http.StatusNotFound,
-						}, nil
-					}
+					assert.Equal(t, "/namespaces/foo/pods/nginx", req.URL.Path)
 
 					header := http.Header{}
 					header.Set("Content-Type", runtime.ContentTypeJSON)
@@ -233,11 +214,7 @@ nginx   <unknown>
 				GroupVersion:         appsv1.SchemeGroupVersion,
 				NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
 				Client: clientFake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
-					if req.URL.Path != fmt.Sprintf("/namespaces/foo/deployments/nginx") {
-						return &http.Response{
-							StatusCode: http.StatusNotFound,
-						}, nil
-					}
+					assert.Equal(t, "/namespaces/foo/deployments/nginx", req.URL.Path)
 
 					header := http.Header{}
 					header.Set("Content-Type", runtime.ContentTypeJSON)
@@ -266,11 +243,7 @@ nginx   <unknown>
 				GroupVersion:         rbacv1.SchemeGroupVersion,
 				NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
 				Client: clientFake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
-					if req.URL.Path != fmt.Sprintf("/clusterroles/read-all") {
-						return &http.Response{
-							StatusCode: http.StatusNotFound,
-						}, nil
-					}
+					assert.Equal(t, "/clusterroles/read-all", req.URL.Path)
 
 					header := http.Header{}
 					header.Set("Content-Type", runtime.ContentTypeJSON)
@@ -297,11 +270,7 @@ read-all   <unknown>
 				GroupVersion:         v1.SchemeGroupVersion,
 				NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
 				Client: clientFake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
-					if req.URL.Path != fmt.Sprintf("/namespaces/default/pods") {
-						return &http.Response{
-							StatusCode: http.StatusNotFound,
-						}, nil
-					}
+					assert.Equal(t, "/namespaces/default/pods", req.URL.Path)
 
 					header := http.Header{}
 					header.Set("Content-Type", runtime.ContentTypeJSON)
@@ -328,8 +297,8 @@ read-all   <unknown>
 			},
 			defaultNamespace: "default",
 			sqlQuery:         "SELECT .apiVersion, .kind FROM pods",
-			expectedOutput: `.apiVersion   .kind
-v1            Pod
+			expectedOutput: `.API_VERSION   .KIND
+v1             Pod
 `,
 		},
 		{
@@ -338,11 +307,7 @@ v1            Pod
 				GroupVersion:         v1.SchemeGroupVersion,
 				NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
 				Client: clientFake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
-					if req.URL.Path != fmt.Sprintf("/namespaces/default/pods") {
-						return &http.Response{
-							StatusCode: http.StatusNotFound,
-						}, nil
-					}
+					assert.Equal(t, "/namespaces/default/pods", req.URL.Path)
 
 					header := http.Header{}
 					header.Set("Content-Type", runtime.ContentTypeJSON)
@@ -369,8 +334,8 @@ v1            Pod
 			},
 			defaultNamespace: "default",
 			sqlQuery:         "SELECT apiVersion, kind FROM pods",
-			expectedOutput: `apiVersion   kind
-v1           Pod
+			expectedOutput: `API_VERSION   KIND
+v1            Pod
 `,
 		},
 		{
@@ -379,11 +344,7 @@ v1           Pod
 				GroupVersion:         v1.SchemeGroupVersion,
 				NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
 				Client: clientFake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
-					if req.URL.Path != fmt.Sprintf("/namespaces/default/pods") {
-						return &http.Response{
-							StatusCode: http.StatusNotFound,
-						}, nil
-					}
+					assert.Equal(t, "/namespaces/default/pods", req.URL.Path)
 
 					header := http.Header{}
 					header.Set("Content-Type", runtime.ContentTypeJSON)
@@ -423,8 +384,8 @@ v1           Pod
 			},
 			defaultNamespace: "default",
 			sqlQuery:         "SELECT .metadata.annotations, .metadata.creationTimestamp, .metadata.finalizers, .metadata.generateName, .metadata.labels, .metadata.name, .metadata.namespace FROM pods",
-			expectedOutput: `.metadata.annotations          .metadata.creationTimestamp     .metadata.finalizers      .metadata.generateName   .metadata.labels               .metadata.name   .metadata.namespace
-map[blargle:flargle foo:bar]   0001-01-01 00:00:00 +0000 UTC   [finalizer1 finalizer2]   nginx-                   map[blargle:flargle foo:bar]   nginx            default
+			expectedOutput: `.METADATA.ANNOTATIONS          .METADATA.CREATION_TIMESTAMP    .METADATA.FINALIZERS      .METADATA.GENERATE_NAME   .METADATA.LABELS               .METADATA.NAME   .METADATA.NAMESPACE
+map[blargle:flargle foo:bar]   0001-01-01 00:00:00 +0000 UTC   [finalizer1 finalizer2]   nginx-                    map[blargle:flargle foo:bar]   nginx            default
 `,
 		},
 		{
@@ -433,11 +394,7 @@ map[blargle:flargle foo:bar]   0001-01-01 00:00:00 +0000 UTC   [finalizer1 final
 				GroupVersion:         v1.SchemeGroupVersion,
 				NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
 				Client: clientFake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
-					if req.URL.Path != fmt.Sprintf("/namespaces/default/pods") {
-						return &http.Response{
-							StatusCode: http.StatusNotFound,
-						}, nil
-					}
+					assert.Equal(t, "/namespaces/default/pods", req.URL.Path)
 
 					header := http.Header{}
 					header.Set("Content-Type", runtime.ContentTypeJSON)
@@ -477,8 +434,8 @@ map[blargle:flargle foo:bar]   0001-01-01 00:00:00 +0000 UTC   [finalizer1 final
 			},
 			defaultNamespace: "default",
 			sqlQuery:         "SELECT annotations, creationTimestamp, finalizers, generateName, labels, name, namespace FROM pods",
-			expectedOutput: `.metadata.annotations          .metadata.creationTimestamp     .metadata.finalizers      .metadata.generateName   .metadata.labels               .metadata.name   .metadata.namespace
-map[blargle:flargle foo:bar]   0001-01-01 00:00:00 +0000 UTC   [finalizer1 finalizer2]   nginx-                   map[blargle:flargle foo:bar]   nginx            default
+			expectedOutput: `.METADATA.ANNOTATIONS          .METADATA.CREATION_TIMESTAMP    .METADATA.FINALIZERS      .METADATA.GENERATE_NAME   .METADATA.LABELS               .METADATA.NAME   .METADATA.NAMESPACE
+map[blargle:flargle foo:bar]   0001-01-01 00:00:00 +0000 UTC   [finalizer1 finalizer2]   nginx-                    map[blargle:flargle foo:bar]   nginx            default
 `,
 		},
 		{
@@ -487,11 +444,7 @@ map[blargle:flargle foo:bar]   0001-01-01 00:00:00 +0000 UTC   [finalizer1 final
 				GroupVersion:         v1.SchemeGroupVersion,
 				NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
 				Client: clientFake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
-					if req.URL.Path != fmt.Sprintf("/namespaces/default/pods") {
-						return &http.Response{
-							StatusCode: http.StatusNotFound,
-						}, nil
-					}
+					assert.Equal(t, "/namespaces/default/pods", req.URL.Path)
 
 					header := http.Header{}
 					header.Set("Content-Type", runtime.ContentTypeJSON)
@@ -518,8 +471,99 @@ map[blargle:flargle foo:bar]   0001-01-01 00:00:00 +0000 UTC   [finalizer1 final
 			},
 			defaultNamespace: "default",
 			sqlQuery:         "SELECT namespace, .foo.bar, name, .blargle.flargle FROM pods",
-			expectedOutput: `.metadata.namespace   .foo.bar   .metadata.name   .blargle.flargle
+			expectedOutput: `.METADATA.NAMESPACE   .FOO.BAR   .METADATA.NAME   .BLARGLE.FLARGLE
 default               <none>     nginx            <none>
+`,
+		},
+		{
+			name: "Query for objects using a numeric predicate",
+			restClient: &clientFake.RESTClient{
+				GroupVersion:         v1.SchemeGroupVersion,
+				NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
+				Client: clientFake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
+					assert.Equal(t, "/namespaces/default/pods", req.URL.Path)
+
+					header := http.Header{}
+					header.Set("Content-Type", runtime.ContentTypeJSON)
+
+					var terminationGracePeriodSeconds = int64(42)
+
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Header:     header,
+						Body: body(v1.SchemeGroupVersion, &v1.PodList{
+							Items: []v1.Pod{
+								{
+									ObjectMeta: metav1.ObjectMeta{
+										Name:      "nginx",
+										Namespace: "default",
+									},
+								},
+								{
+									ObjectMeta: metav1.ObjectMeta{
+										Name:      "nginx-2",
+										Namespace: "default",
+									},
+									Spec: v1.PodSpec{
+										TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
+									},
+								},
+							},
+						}),
+					}, nil
+				}),
+			},
+			defaultNamespace: "default",
+			sqlQuery:         "SELECT name, .spec.terminationGracePeriodSeconds FROM pods WHERE .spec.terminationGracePeriodSeconds = 42",
+			expectedOutput: `.METADATA.NAME   .SPEC.TERMINATION_GRACE_PERIOD_SECONDS
+nginx-2          42
+`,
+		},
+		{
+			name: "Query for objects using boolean predicates",
+			restClient: &clientFake.RESTClient{
+				GroupVersion:         v1.SchemeGroupVersion,
+				NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
+				Client: clientFake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
+					assert.Equal(t, "/namespaces/default/pods", req.URL.Path)
+
+					header := http.Header{}
+					header.Set("Content-Type", runtime.ContentTypeJSON)
+
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Header:     header,
+						Body: body(v1.SchemeGroupVersion, &v1.PodList{
+							Items: []v1.Pod{
+								{
+									ObjectMeta: metav1.ObjectMeta{
+										Name:      "nginx",
+										Namespace: "default",
+									},
+									Spec: v1.PodSpec{
+										HostNetwork: false,
+										HostPID:     true,
+									},
+								},
+								{
+									ObjectMeta: metav1.ObjectMeta{
+										Name:      "nginx-2",
+										Namespace: "default",
+									},
+									Spec: v1.PodSpec{
+										HostNetwork: true,
+										HostPID:     false,
+									},
+								},
+							},
+						}),
+					}, nil
+				}),
+			},
+			defaultNamespace: "default",
+			sqlQuery:         "SELECT name, .spec.hostNetwork, .spec.hostPid FROM pods WHERE .spec.hostNetwork = True AND .spec.hostPid = False",
+			expectedOutput: `.METADATA.NAME   .SPEC.HOST_NETWORK   .SPEC.HOST_PID
+nginx-2          true                 <none>
 `,
 		},
 	}

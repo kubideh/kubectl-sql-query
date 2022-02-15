@@ -2,15 +2,21 @@ package query
 
 import (
 	"fmt"
+	"reflect"
+	"strings"
+	"unicode"
 
 	"github.com/antlr/antlr4/runtime/Go/antlr"
 	"github.com/kubideh/kubectl-sql-query/query/sql"
-	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/cli-runtime/pkg/printers"
 	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/util/jsonpath"
 	"k8s.io/kubectl/pkg/cmd/get"
 )
 
@@ -45,29 +51,93 @@ func (q *Query) parseQuery(errorListener *sql.ErrorListenerImpl, listener *sql.L
 }
 
 func (q *Query) find(listener *sql.ListenerImpl) runtime.Object {
-	resourceTypeOrName := listener.TableName
-	if name := listener.ComparisonPredicates["name"]; name != "" {
-		resourceTypeOrName = fmt.Sprintf("%s/%s", listener.TableName, name)
-	}
-
 	builder := q.builder.
 		Unstructured().
 		NamespaceParam(namespaceFrom(listener, q.defaultNamespace)).
 		DefaultNamespace().
-		ResourceTypeOrNameArgs(true, resourceTypeOrName).
+		ResourceTypeOrNameArgs(true, resourceFrom(listener)).
 		ContinueOnError().
 		Latest()
 
 	result := builder.Do()
 
+	result.IgnoreErrors(apierrors.IsNotFound)
 	object, err := result.Object()
 
 	if err != nil {
-		fmt.Fprintf(q.streams.ErrOut, "%v\n", err)
-		return &v1.List{}
+		panic(err)
 	}
 
-	return object
+	results := filter(listener, object)
+
+	return &results
+}
+
+func filter(listener *sql.ListenerImpl, object runtime.Object) (results metav1.List) {
+	filterOne := createFilter(listener, &results)
+
+	if meta.IsListType(object) {
+		if err := meta.EachListItem(object, filterOne); err != nil {
+			panic(err.Error())
+		}
+	} else {
+		filterOne(object)
+	}
+
+	return results
+}
+
+func createFilter(listener *sql.ListenerImpl, results *metav1.List) func(object runtime.Object) error {
+	return func(object runtime.Object) error {
+		if len(listener.ComparisonPredicates) == 0 {
+			results.Items = append(results.Items, runtime.RawExtension{Object: object})
+			return nil
+		}
+
+		for key, value := range listener.ComparisonPredicates {
+			path, err := get.RelaxedJSONPathExpression(columnFromAliases(key))
+
+			if err != nil {
+				panic(err.Error())
+			}
+
+			jsonPath := jsonpath.New("object")
+			jsonPath = jsonPath.AllowMissingKeys(true)
+			if err := jsonPath.Parse(path); err != nil {
+				panic(err.Error())
+			}
+			values, err := jsonPath.FindResults(object)
+
+			if err != nil {
+				panic(err.Error())
+			}
+
+			if len(values) == 0 || len(values[0]) == 0 {
+				continue
+			}
+
+			var found bool
+			for arrIx := range values {
+				for valIx := range values[arrIx] {
+					objectValue := values[arrIx][valIx].Interface()
+					if values[arrIx][valIx].Kind() == reflect.Ptr && !values[arrIx][valIx].IsNil() {
+						objectValue = values[arrIx][valIx].Elem().Interface()
+					}
+
+					if objectValue == value {
+						found = true
+					}
+				}
+			}
+
+			if found {
+				results.Items = append(results.Items, runtime.RawExtension{Object: object})
+				return nil
+			}
+		}
+
+		return nil
+	}
 }
 
 var objectMetadataColumnAliases = map[string]string{
@@ -88,28 +158,39 @@ func columnsFromAliases(columns []string) (result []string) {
 	return
 }
 
-func columnFromAliases(c string) string {
-	if real, ok := objectMetadataColumnAliases[c]; ok {
-		return real
+func columnFromAliases(alias string) (result string) {
+	result = alias
+
+	if val, ok := objectMetadataColumnAliases[alias]; ok {
+		result = val
 	}
 
-	return c
+	return
 }
 
 func columnSpec(columns []string) (spec string) {
 	for i, c := range columns {
 		if i == 0 {
-			spec += fmt.Sprintf("%s:%s", c, c)
+			spec += fmt.Sprintf("%s:%s", toUpperWithUnderscores(c), c)
 		} else {
-			spec += fmt.Sprintf(",%s:%s", c, c)
+			spec += fmt.Sprintf(",%s:%s", toUpperWithUnderscores(c), c)
 		}
 	}
 
 	return
 }
 
-func createDefaultPrinter() printers.ResourcePrinter {
-	return printers.NewTablePrinter(printers.PrintOptions{})
+func toUpperWithUnderscores(s string) (result string) {
+	for _, c := range s {
+		if unicode.IsUpper(c) && unicode.IsLetter(c) {
+			result += "_"
+			result += string(c)
+		} else {
+			result += strings.ToUpper(string(c))
+		}
+	}
+
+	return
 }
 
 func createCustomColumnsPrinter(columns []string) printers.ResourcePrinter {
@@ -128,12 +209,14 @@ func createCustomColumnsPrinter(columns []string) printers.ResourcePrinter {
 	return printer
 }
 
-func createPrinter(columns []string) printers.ResourcePrinter {
-	if len(columns) == 0 {
-		return createDefaultPrinter()
+func createPrinter(columns []string) (printer printers.ResourcePrinter) {
+	printer = printers.NewTablePrinter(printers.PrintOptions{})
+
+	if len(columns) > 0 {
+		printer = createCustomColumnsPrinter(columns)
 	}
 
-	return createCustomColumnsPrinter(columns)
+	return
 }
 
 func (q *Query) print(columns []string, results runtime.Object) {
@@ -158,9 +241,19 @@ func Create(streams genericclioptions.IOStreams, builder *resource.Builder, defa
 func namespaceFrom(listener *sql.ListenerImpl, defaultNamespace string) (result string) {
 	result = defaultNamespace
 
-	if listener.ComparisonPredicates["namespace"] != "" {
-		result = listener.ComparisonPredicates["namespace"]
+	if namespace, ok := listener.ComparisonPredicates["namespace"].(string); ok && namespace != "" {
+		result = namespace
 	}
 
 	return
+}
+
+func resourceFrom(listener *sql.ListenerImpl) (result string) {
+	result = listener.TableName
+
+	if name, ok := listener.ComparisonPredicates["name"].(string); ok && name != "" {
+		result = fmt.Sprintf("%s/%s", listener.TableName, name)
+	}
+
+	return result
 }
