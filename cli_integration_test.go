@@ -5,6 +5,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os/exec"
 	"strings"
 	"testing"
@@ -146,6 +147,85 @@ func TestCommandUsingNamespaceInContext(t *testing.T) {
 
 	assert.NoError(t, err, "Failed to run kubectl-sql-query \"SELECT * FROM pods\"")
 	assert.Contains(t, string(out), podName, "Unexpected output")
+}
+
+func TestQueryForPodsInNonDefaultNamespace(t *testing.T) {
+	const namespaceName = "fake-namespace-blargle"
+	const podName = "fake-pod-blargle"
+
+	verifyClusterIsUp(t)
+
+	clientConfigLoadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+	configOverrides := &clientcmd.ConfigOverrides{}
+	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(clientConfigLoadingRules, configOverrides)
+	clientConfig, err := kubeConfig.ClientConfig()
+	require.NoError(t, err, "Failed to create  client config")
+	clientSet, err := kubernetes.NewForConfig(clientConfig)
+	require.NoError(t, err, "Failed to create clientset")
+
+	_, err = clientSet.CoreV1().Namespaces().Create(
+		context.Background(),
+		&v1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: namespaceName,
+			},
+		},
+		metav1.CreateOptions{},
+	)
+	if !apierrors.IsAlreadyExists(err) {
+		require.NoErrorf(t, err, "Failed to create the namespace %s", namespaceName)
+	}
+
+	_, err = clientSet.CoreV1().Pods(namespaceName).Create(
+		context.Background(),
+		&v1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      podName,
+				Namespace: namespaceName,
+			},
+			Spec: v1.PodSpec{
+				Containers: []v1.Container{
+					{
+						Name:  podName,
+						Image: "busybox",
+					},
+				},
+			},
+		},
+		metav1.CreateOptions{},
+	)
+	if !apierrors.IsAlreadyExists(err) {
+		require.NoErrorf(t, err, "Failed to create the pod %s in namespace %s", podName, namespaceName)
+	}
+
+	out, err := exec.Command("kubectl", "config", "current-context").CombinedOutput()
+	require.NoError(t, err, "Failed to get current context")
+	currentContext := strings.TrimSpace(string(out))
+	out, err = exec.Command("kubectl", "config", "set", "contexts."+currentContext+".namespace", "default").CombinedOutput()
+	t.Log(string(out))
+	require.NoError(t, err, "Failed to set namespace on current context")
+
+	out, err = exec.Command("kubectl-sql-query", fmt.Sprintf("SELECT * FROM pods WHERE namespace='%s'", namespaceName)).CombinedOutput()
+
+	assert.NoErrorf(t, err, "Failed to run kubectl-sql-query \"SELECT * FROM pods WHERE namespace='%s'\"", namespaceName)
+	assert.Contains(t, string(out), podName, "Unexpected output")
+}
+
+func TestQueryForPodsInAllNamespaces(t *testing.T) {
+	verifyClusterIsUp(t)
+
+	out, err := exec.Command("kubectl", "config", "current-context").CombinedOutput()
+	require.NoError(t, err, "Failed to get current context")
+	currentContext := strings.TrimSpace(string(out))
+	out, err = exec.Command("kubectl", "config", "set", "contexts."+currentContext+".namespace", "default").CombinedOutput()
+	t.Log(string(out))
+	require.NoError(t, err, "Failed to set namespace on current context")
+
+	out, err = exec.Command("kubectl-sql-query", "SELECT * FROM pods WHERE namespace='*'").CombinedOutput()
+
+	assert.NoError(t, err, "Failed to run kubectl-sql-query \"SELECT * FROM pods WHERE namespace='*'\"")
+	assert.Contains(t, string(out), "coredns", "Unexpected output")
+	assert.Contains(t, string(out), "local-path-provisioner", "Unexpected output")
 }
 
 func verifyClusterIsUp(t *testing.T) {

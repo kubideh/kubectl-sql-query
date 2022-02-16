@@ -50,10 +50,21 @@ func (q *Query) parseQuery(errorListener *sql.ErrorListenerImpl, listener *sql.L
 	antlr.ParseTreeWalkerDefault.Walk(listener, p.Parse())
 }
 
+func allNamespacesFrom(listener *sql.ListenerImpl) (allNamespaces bool) {
+	if listener.ComparisonPredicates["namespace"] == "*" || listener.ComparisonPredicates[".metadata.namespace"] == "*" {
+		allNamespaces = true
+	}
+
+	return
+}
+
 func (q *Query) find(listener *sql.ListenerImpl) runtime.Object {
+	allNamespaces := allNamespacesFrom(listener)
+
 	builder := q.builder.
 		Unstructured().
 		NamespaceParam(namespaceFrom(listener, q.defaultNamespace)).
+		AllNamespaces(allNamespaces).
 		DefaultNamespace().
 		ResourceTypeOrNameArgs(true, resourceFrom(listener)).
 		ContinueOnError().
@@ -74,6 +85,11 @@ func (q *Query) find(listener *sql.ListenerImpl) runtime.Object {
 }
 
 func filter(listener *sql.ListenerImpl, object runtime.Object) (results metav1.List) {
+	// The namespace is used when querying resources. so it
+	// shouldn't be used when filtering results.
+	delete(listener.ComparisonPredicates, "namespace")
+	delete(listener.ComparisonPredicates, ".metadata.namespace")
+
 	filterOne := createFilter(listener, &results)
 
 	if meta.IsListType(object) {

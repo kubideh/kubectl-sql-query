@@ -603,6 +603,124 @@ nginx-2          true                 <none>
 v1    Pod
 `,
 		},
+		{
+			name: "Query for objects in all namespaces",
+			restClient: &clientFake.RESTClient{
+				GroupVersion:         v1.SchemeGroupVersion,
+				NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
+				Client: clientFake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
+					assert.Equal(t, "/pods", req.URL.Path)
+
+					header := http.Header{}
+					header.Set("Content-Type", runtime.ContentTypeJSON)
+
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Header:     header,
+						Body: body(v1.SchemeGroupVersion, &v1.PodList{
+							Items: []v1.Pod{
+								{
+									TypeMeta: metav1.TypeMeta{
+										APIVersion: "v1",
+										Kind:       "Pod",
+									},
+									ObjectMeta: metav1.ObjectMeta{
+										Name:      "nginx-foo",
+										Namespace: "foo",
+									},
+								},
+								{
+									TypeMeta: metav1.TypeMeta{
+										APIVersion: "v1",
+										Kind:       "Pod",
+									},
+									ObjectMeta: metav1.ObjectMeta{
+										Name:      "nginx-bar",
+										Namespace: "bar",
+									},
+								},
+								{
+									TypeMeta: metav1.TypeMeta{
+										APIVersion: "v1",
+										Kind:       "Pod",
+									},
+									ObjectMeta: metav1.ObjectMeta{
+										Name:      "nginx-default",
+										Namespace: "default",
+									},
+								},
+							},
+						}),
+					}, nil
+				}),
+			},
+			defaultNamespace: "default",
+			sqlQuery:         "SELECT * FROM pods WHERE namespace = '*'",
+			expectedOutput: `NAME            AGE
+nginx-foo       <unknown>
+nginx-bar       <unknown>
+nginx-default   <unknown>
+`,
+		},
+		{
+			name: "Query for objects in all namespaces using JSONPath",
+			restClient: &clientFake.RESTClient{
+				GroupVersion:         v1.SchemeGroupVersion,
+				NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
+				Client: clientFake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
+					assert.Equal(t, "/pods", req.URL.Path)
+
+					header := http.Header{}
+					header.Set("Content-Type", runtime.ContentTypeJSON)
+
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Header:     header,
+						Body: body(v1.SchemeGroupVersion, &v1.PodList{
+							Items: []v1.Pod{
+								{
+									TypeMeta: metav1.TypeMeta{
+										APIVersion: "v1",
+										Kind:       "Pod",
+									},
+									ObjectMeta: metav1.ObjectMeta{
+										Name:      "nginx-foo",
+										Namespace: "foo",
+									},
+								},
+								{
+									TypeMeta: metav1.TypeMeta{
+										APIVersion: "v1",
+										Kind:       "Pod",
+									},
+									ObjectMeta: metav1.ObjectMeta{
+										Name:      "nginx-bar",
+										Namespace: "bar",
+									},
+								},
+								{
+									TypeMeta: metav1.TypeMeta{
+										APIVersion: "v1",
+										Kind:       "Pod",
+									},
+									ObjectMeta: metav1.ObjectMeta{
+										Name:      "nginx-default",
+										Namespace: "default",
+									},
+								},
+							},
+						}),
+					}, nil
+				}),
+			},
+			defaultNamespace: "default",
+			sqlQuery:         "SELECT * FROM pods WHERE .metadata.namespace = '*'",
+			expectedOutput: `NAME            AGE
+nginx-foo       <unknown>
+nginx-bar       <unknown>
+nginx-default   <unknown>
+`,
+		},
 	}
 
 	for _, c := range cases {

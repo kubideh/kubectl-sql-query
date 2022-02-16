@@ -77,6 +77,14 @@ NAME                AGE
 system:basic-user   46m
 ```
 
+**Quering for objects in all namespaces:**
+
+An asterix (`*`) is used as the comparator value when querying for objects in all namespaces:
+
+```console
+kubectl sql query "SELECT * FROM pods WHERE namespace='*'"
+```
+
 ## SQL Features
 
 Most standard or common SQL features are supported. What follows is a table that gives the collection of supported SQL features and whether they are implemented yet.
