@@ -725,8 +725,6 @@ nginx-default   <unknown>
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			streams, _, outBuf, errBuf := genericclioptions.NewTestIOStreams()
-
 			fakeClientFn := resource.FakeClientFunc(func(version schema.GroupVersion) (resource.RESTClient, error) {
 				return c.restClient, nil
 			})
@@ -741,6 +739,7 @@ nginx-default   <unknown>
 
 			fakeBuilder := resource.NewFakeBuilder(fakeClientFn, restMapper, categoryExpander)
 
+			streams, _, outBuf, errBuf := genericclioptions.NewTestIOStreams()
 			queryCmd := Create(streams, fakeBuilder, c.defaultNamespace)
 
 			rc := queryCmd.Run(c.sqlQuery)
