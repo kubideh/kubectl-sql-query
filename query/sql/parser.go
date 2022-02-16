@@ -1,6 +1,8 @@
 package sql
 
-//go:generate antlr -Dlanguage=Go -Werror -o parser SQLiteLexer.g4 SQLiteParser.g4
+// The grammar for SQLite is used mostly without any additions. A
+// number of unused productions will be removed, however.
+//go:generate antlr -Dlanguage=Go -Werror -Xexact-output-dir -o parser SQLiteLexer.g4 SQLiteParser.g4
 
 import (
 	"fmt"
@@ -31,8 +33,7 @@ var _ antlr.ErrorListener = &ErrorListenerImpl{}
 // a query against the Kubernetes API.
 type ListenerImpl struct {
 	parser.BaseSQLiteParserListener
-	field                string
-	stack                []string
+	stack                []interface{}
 	TableName            string
 	Columns              []string
 	ComparisonPredicates map[string]interface{}
@@ -41,28 +42,32 @@ type ListenerImpl struct {
 
 // ExitColumn_alias is called when production column_alias is exited.
 func (l *ListenerImpl) ExitColumn_alias(ctx *parser.Column_aliasContext) {
-	l.stack = append(l.stack, ctx.GetText())
+	l.stack = push(l.stack, ctx.IDENTIFIER().GetText())
 }
 
 // ExitColumn_name is called when production column_name is exited.
 func (l *ListenerImpl) ExitColumn_name(ctx *parser.Column_nameContext) {
-	l.stack = append(l.stack, ctx.GetText())
-
-	l.field = ctx.GetText()
+	l.stack = push(l.stack, ctx.Any_name().GetText())
 }
 
 // ExitResult_column is called when production result_column is exited.
 func (l *ListenerImpl) ExitResult_column(ctx *parser.Result_columnContext) {
+	// Project every column when the SELECT clause has the form
+	// 'SELECT *'.
 	if ctx.STAR() != nil {
 		return
 	}
 
-	var name string
-	name, l.stack = take(l.stack)
+	// Otherwise, the stack contains a column name or a column
+	// alias followed by a column name.
+	var elem interface{}
+	elem, l.stack = take(l.stack)
+	name := elem.(string)
 
 	if len(l.stack) > 0 {
 		alias := name
-		name, l.stack = take(l.stack)
+		elem, l.stack = take(l.stack)
+		name = elem.(string)
 
 		if l.ColumnAliases == nil {
 			l.ColumnAliases = make(map[string]string)
@@ -75,7 +80,25 @@ func (l *ListenerImpl) ExitResult_column(ctx *parser.Result_columnContext) {
 
 // ExitTable_name is called when production table_name is exited.
 func (l *ListenerImpl) ExitTable_name(ctx *parser.Table_nameContext) {
-	l.TableName = ctx.GetText()
+	l.TableName = ctx.Any_name().GetText()
+}
+
+// ExitExpr is called when production expr is exited.
+func (l *ListenerImpl) ExitExpr(ctx *parser.ExprContext) {
+	// Assignment in SQLite uses the single '=' operator. So,
+	// assignment will be overloaded to mean equality comparison.
+	// A comparison predicate gets created when there is an
+	// assignment.
+	if ctx.ASSIGN() != nil && len(l.stack) > 1 {
+		var rhs interface{}
+		rhs, l.stack = take(l.stack)
+
+		var lhs interface{}
+		lhs, l.stack = take(l.stack)
+
+		field := lhs.(string)
+		l.ComparisonPredicates[field] = rhs
+	}
 }
 
 // ExitLiteral_value is called when production literal_value is exited.
@@ -88,32 +111,36 @@ func (l *ListenerImpl) ExitLiteral_value(ctx *parser.Literal_valueContext) {
 		value := ctx.STRING_LITERAL().GetText()
 		value = strings.TrimPrefix(value, "'")
 		value = strings.TrimRight(value, "'")
-		l.ComparisonPredicates[l.field] = value
+		l.stack = push(l.stack, value)
 	} else if ctx.NUMERIC_LITERAL() != nil {
 		value, err := strconv.ParseInt(ctx.NUMERIC_LITERAL().GetText(), 10, 64)
 		if err != nil {
 			panic(err.Error())
 		}
-		l.ComparisonPredicates[l.field] = value
+		l.stack = push(l.stack, value)
 	} else if ctx.TRUE_() != nil {
-		l.ComparisonPredicates[l.field] = true
+		l.stack = push(l.stack, true)
 	} else if ctx.FALSE_() != nil {
-		l.ComparisonPredicates[l.field] = false
+		l.stack = push(l.stack, false)
 	}
 }
 
-func top(s []string) int {
-	return len(s) - 1
+func push(stack []interface{}, value interface{}) []interface{} {
+	return append(stack, value)
 }
 
-func pop(s []string) []string {
-	return s[:top(s)]
+func top(stack []interface{}) int {
+	return len(stack) - 1
 }
 
-func take(s []string) (value string, result []string) {
-	n := top(s)
-	value = s[n]
-	result = pop(s)
+func pop(stack []interface{}) []interface{} {
+	return stack[:top(stack)]
+}
+
+func take(stack []interface{}) (value interface{}, result []interface{}) {
+	n := top(stack)
+	value = stack[n]
+	result = pop(stack)
 	return
 }
 

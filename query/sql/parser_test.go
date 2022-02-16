@@ -179,7 +179,6 @@ func TestParser(t *testing.T) {
 				t.Log(errorListener.Error.Error())
 			}
 
-			listener.field = ""
 			listener.stack = nil
 
 			assert.Equal(t, c.expectedListener, listener)
