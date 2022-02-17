@@ -16,7 +16,7 @@ A true SQL-query enhancement for kubectl
 Download the binary from [releases](https://github.com/kubideh/kubectl-sql-query/releases), and install it in the PATH. For example:
 
 ```console
-curl -L https://github.com/kubideh/kubectl-sql-query/releases/download/v0.1.0/kubectl-sql-query_0.1.0_darwin_arm64.tar.gz -o - | gunzip | tar -xvf -
+curl -L https://github.com/kubideh/kubectl-sql-query/releases/download/v0.2.0/kubectl-sql-query_0.2.0_darwin_arm64.tar.gz -o - | gunzip | tar -xvf -
 sudo mv kubectl-sql-query /usr/local/bin/
 alias ksql=kubectl-sql-query
 ```
