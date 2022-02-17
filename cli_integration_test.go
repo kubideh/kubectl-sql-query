@@ -136,14 +136,9 @@ func TestCommandUsingNamespaceInContext(t *testing.T) {
 		require.NoErrorf(t, err, "Failed to create the pod %s in namespace %s", podName, namespaceName)
 	}
 
-	out, err := exec.Command("kubectl", "config", "current-context").CombinedOutput()
-	require.NoError(t, err, "Failed to get current context")
-	currentContext := strings.TrimSpace(string(out))
-	out, err = exec.Command("kubectl", "config", "set", "contexts."+currentContext+".namespace", namespaceName).CombinedOutput()
-	t.Log(string(out))
-	require.NoError(t, err, "Failed to set namespace on current context")
+	setNamespaceInContext(t, namespaceName)
 
-	out, err = exec.Command("kubectl-sql-query", "SELECT * FROM pods").CombinedOutput()
+	out, err := exec.Command("kubectl-sql-query", "SELECT * FROM pods").CombinedOutput()
 
 	assert.NoError(t, err, "Failed to run kubectl-sql-query \"SELECT * FROM pods\"")
 	assert.Contains(t, string(out), podName, "Unexpected output")
@@ -198,14 +193,9 @@ func TestQueryForPodsInNonDefaultNamespace(t *testing.T) {
 		require.NoErrorf(t, err, "Failed to create the pod %s in namespace %s", podName, namespaceName)
 	}
 
-	out, err := exec.Command("kubectl", "config", "current-context").CombinedOutput()
-	require.NoError(t, err, "Failed to get current context")
-	currentContext := strings.TrimSpace(string(out))
-	out, err = exec.Command("kubectl", "config", "set", "contexts."+currentContext+".namespace", "default").CombinedOutput()
-	t.Log(string(out))
-	require.NoError(t, err, "Failed to set namespace on current context")
+	setNamespaceInContext(t, "default")
 
-	out, err = exec.Command("kubectl-sql-query", fmt.Sprintf("SELECT * FROM pods WHERE namespace='%s'", namespaceName)).CombinedOutput()
+	out, err := exec.Command("kubectl-sql-query", fmt.Sprintf("SELECT * FROM pods WHERE namespace='%s'", namespaceName)).CombinedOutput()
 
 	assert.NoErrorf(t, err, "Failed to run kubectl-sql-query \"SELECT * FROM pods WHERE namespace='%s'\"", namespaceName)
 	assert.Contains(t, string(out), podName, "Unexpected output")
@@ -214,14 +204,9 @@ func TestQueryForPodsInNonDefaultNamespace(t *testing.T) {
 func TestQueryForPodsInAllNamespaces(t *testing.T) {
 	verifyClusterIsUp(t)
 
-	out, err := exec.Command("kubectl", "config", "current-context").CombinedOutput()
-	require.NoError(t, err, "Failed to get current context")
-	currentContext := strings.TrimSpace(string(out))
-	out, err = exec.Command("kubectl", "config", "set", "contexts."+currentContext+".namespace", "default").CombinedOutput()
-	t.Log(string(out))
-	require.NoError(t, err, "Failed to set namespace on current context")
+	setNamespaceInContext(t, "default")
 
-	out, err = exec.Command("kubectl-sql-query", "SELECT * FROM pods WHERE namespace='*'").CombinedOutput()
+	out, err := exec.Command("kubectl-sql-query", "SELECT * FROM pods WHERE namespace='*'").CombinedOutput()
 
 	assert.NoError(t, err, "Failed to run kubectl-sql-query \"SELECT * FROM pods WHERE namespace='*'\"")
 	assert.Contains(t, string(out), "coredns", "Unexpected output")
@@ -233,4 +218,16 @@ func verifyClusterIsUp(t *testing.T) {
 
 	t.Log(string(out))
 	require.NoError(t, err, "Is the cluster up?")
+}
+
+func setNamespaceInContext(t *testing.T, namespace string) {
+	out, err := exec.Command("kubectl", "config", "current-context").CombinedOutput()
+
+	require.NoError(t, err, "Failed to get current context")
+
+	currentContext := strings.TrimSpace(string(out))
+	out, err = exec.Command("kubectl", "config", "set", "contexts."+currentContext+".namespace", namespace).CombinedOutput()
+
+	t.Log(string(out))
+	require.NoError(t, err, "Failed to set namespace on current context")
 }
