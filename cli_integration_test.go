@@ -87,32 +87,15 @@ func TestCommandUsingNamespaceInContext(t *testing.T) {
 
 	verifyClusterIsUp(t)
 
-	clientConfigLoadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
-	configOverrides := &clientcmd.ConfigOverrides{
+	clientSet := createClientSetWithConfigOverrides(t, &clientcmd.ConfigOverrides{
 		Context: api.Context{
 			Namespace: namespaceName,
 		},
-	}
-	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(clientConfigLoadingRules, configOverrides)
-	clientConfig, err := kubeConfig.ClientConfig()
-	require.NoError(t, err, "Failed to create  client config")
-	clientSet, err := kubernetes.NewForConfig(clientConfig)
-	require.NoError(t, err, "Failed to create clientset")
+	})
 
-	_, err = clientSet.CoreV1().Namespaces().Create(
-		context.Background(),
-		&v1.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: namespaceName,
-			},
-		},
-		metav1.CreateOptions{},
-	)
-	if !apierrors.IsAlreadyExists(err) {
-		require.NoErrorf(t, err, "Failed to create the namespace %s", namespaceName)
-	}
+	setupNamespace(t, clientSet, namespaceName)
 
-	_, err = clientSet.CoreV1().Pods(namespaceName).Create(
+	_, err := clientSet.CoreV1().Pods(namespaceName).Create(
 		context.Background(),
 		&v1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
@@ -147,28 +130,11 @@ func TestQueryForPodsInNonDefaultNamespace(t *testing.T) {
 
 	verifyClusterIsUp(t)
 
-	clientConfigLoadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
-	configOverrides := &clientcmd.ConfigOverrides{}
-	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(clientConfigLoadingRules, configOverrides)
-	clientConfig, err := kubeConfig.ClientConfig()
-	require.NoError(t, err, "Failed to create  client config")
-	clientSet, err := kubernetes.NewForConfig(clientConfig)
-	require.NoError(t, err, "Failed to create clientset")
+	clientSet := createClientSet(t)
 
-	_, err = clientSet.CoreV1().Namespaces().Create(
-		context.Background(),
-		&v1.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: namespaceName,
-			},
-		},
-		metav1.CreateOptions{},
-	)
-	if !apierrors.IsAlreadyExists(err) {
-		require.NoErrorf(t, err, "Failed to create the namespace %s", namespaceName)
-	}
+	setupNamespace(t, clientSet, namespaceName)
 
-	_, err = clientSet.CoreV1().Pods(namespaceName).Create(
+	_, err := clientSet.CoreV1().Pods(namespaceName).Create(
 		context.Background(),
 		&v1.Pod{
 			ObjectMeta: metav1.ObjectMeta{
@@ -216,6 +182,27 @@ func verifyClusterIsUp(t *testing.T) {
 	require.NoError(t, err, "Is the cluster up?")
 }
 
+func createClientSetWithConfigOverrides(t *testing.T, configOverrides *clientcmd.ConfigOverrides) *kubernetes.Clientset {
+	clientConfigLoadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+
+	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(clientConfigLoadingRules, configOverrides)
+
+	clientConfig, err := kubeConfig.ClientConfig()
+
+	require.NoError(t, err, "Failed to create  client config")
+
+	clientSet, err := kubernetes.NewForConfig(clientConfig)
+
+	require.NoError(t, err, "Failed to create clientset")
+
+	return clientSet
+
+}
+
+func createClientSet(t *testing.T) *kubernetes.Clientset {
+	return createClientSetWithConfigOverrides(t, &clientcmd.ConfigOverrides{})
+}
+
 func setNamespaceInContext(t *testing.T, namespace string) {
 	out, err := exec.Command("kubectl", "config", "current-context").CombinedOutput()
 
@@ -228,6 +215,24 @@ func setNamespaceInContext(t *testing.T, namespace string) {
 	t.Log(string(out))
 
 	require.NoError(t, err, "Failed to set namespace on current context")
+}
+
+func setupNamespace(t *testing.T, clientSet *kubernetes.Clientset, namespace string) {
+	_, err := clientSet.CoreV1().Namespaces().Create(
+		context.Background(),
+		&v1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: namespace,
+			},
+		},
+		metav1.CreateOptions{},
+	)
+
+	if !apierrors.IsAlreadyExists(err) {
+		require.NoErrorf(t, err, "Failed to create the namespace %s", namespace)
+	}
+
+	t.Logf("Created namespace %s", namespace)
 }
 
 func executeQuery(t *testing.T, query string) string {
