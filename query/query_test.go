@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -31,6 +32,7 @@ func TestQueryFunction(t *testing.T) {
 		defaultNamespace string
 		sqlQuery         string
 		expectedPath     string
+		expectedQuery    url.Values
 		expectedOutput   string
 		expectedError    string
 		returnCode       int
@@ -492,11 +494,42 @@ nginx-bar       <unknown>
 nginx-default   <unknown>
 `,
 		},
+		{
+			name:         "Query using label selectors",
+			groupVersion: v1.SchemeGroupVersion,
+			returnedObject: &v1.PodList{
+				Items: []v1.Pod{
+					{
+						TypeMeta: metav1.TypeMeta{
+							APIVersion: "v1",
+							Kind:       "Pod",
+						},
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{
+								"app":     "foo",
+								"gateway": "nginx",
+							},
+							Name:      "nginx-foo",
+							Namespace: "default",
+						},
+					},
+				},
+			},
+			defaultNamespace: "default",
+			sqlQuery:         "SELECT name, labels FROM Pods WHERE labels='app=foo,gateway=nginx'",
+			expectedPath:     "/namespaces/default/pods",
+			expectedQuery: url.Values{
+				"labelSelector": []string{"app=foo,gateway=nginx"},
+			},
+			expectedOutput: `.METADATA.NAME   .METADATA.LABELS
+nginx-foo        map[app:foo gateway:nginx]
+`,
+		},
 	}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			restClient := createRESTClient(t, c.groupVersion, c.expectedPath, c.returnedObject)
+			restClient := createRESTClient(t, c.groupVersion, c.expectedPath, c.expectedQuery, c.returnedObject)
 
 			fakeClientFn := resource.FakeClientFunc(func(version schema.GroupVersion) (resource.RESTClient, error) {
 				return restClient, nil
@@ -524,12 +557,16 @@ nginx-default   <unknown>
 	}
 }
 
-func createRESTClient(t *testing.T, groupVersion schema.GroupVersion, expectedPath string, returnedObject runtime.Object) *clientFake.RESTClient {
+func createRESTClient(t *testing.T, groupVersion schema.GroupVersion, expectedPath string, expectedQuery url.Values, returnedObject runtime.Object) *clientFake.RESTClient {
 	return &clientFake.RESTClient{
 		GroupVersion:         groupVersion,
 		NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
 		Client: clientFake.CreateHTTPClient(func(req *http.Request) (*http.Response, error) {
 			assert.Equal(t, expectedPath, req.URL.Path)
+			if expectedQuery == nil {
+				expectedQuery = make(url.Values)
+			}
+			assert.Equal(t, expectedQuery, req.URL.Query())
 
 			if returnedObject == nil {
 				return &http.Response{

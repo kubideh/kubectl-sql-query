@@ -174,6 +174,73 @@ func TestQueryForPodsInAllNamespaces(t *testing.T) {
 	assert.Contains(t, out, "local-path-provisioner", "Unexpected output")
 }
 
+func TestQueryForPodsUsingLabels(t *testing.T) {
+	const namespaceName = "fake-namespace-blargle"
+
+	verifyClusterIsUp(t)
+
+	clientSet := createClientSet(t)
+
+	setupNamespace(t, clientSet, namespaceName)
+
+	_, err := clientSet.CoreV1().Pods(namespaceName).Create(
+		context.Background(),
+		&v1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Labels: map[string]string{
+					"app": "foo",
+				},
+				Name:      "foo",
+				Namespace: namespaceName,
+			},
+			Spec: v1.PodSpec{
+				Containers: []v1.Container{
+					{
+						Name:  "foo",
+						Image: "busybox",
+					},
+				},
+			},
+		},
+		metav1.CreateOptions{},
+	)
+	if !apierrors.IsAlreadyExists(err) {
+		require.NoErrorf(t, err, "Failed to create the pod %s in namespace %s", "foo", namespaceName)
+	}
+
+	_, err = clientSet.CoreV1().Pods(namespaceName).Create(
+		context.Background(),
+		&v1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Labels: map[string]string{
+					"app": "bar",
+				},
+				Name:      "bar",
+				Namespace: namespaceName,
+			},
+			Spec: v1.PodSpec{
+				Containers: []v1.Container{
+					{
+						Name:  "bar",
+						Image: "busybox",
+					},
+				},
+			},
+		},
+		metav1.CreateOptions{},
+	)
+	if !apierrors.IsAlreadyExists(err) {
+		require.NoErrorf(t, err, "Failed to create the pod %s in namespace %s", "bar", namespaceName)
+	}
+
+	setNamespaceInContext(t, namespaceName)
+
+	out := executeQuery(t, fmt.Sprintf("SELECT * FROM pods WHERE labels='app=bar'"))
+
+	assert.NotContains(t, out, "foo", "Unexpected output")
+	assert.Contains(t, out, "bar", "Unexpected output")
+}
+
 func verifyClusterIsUp(t *testing.T) {
 	out, err := exec.Command("kubectl", "cluster-info").CombinedOutput()
 

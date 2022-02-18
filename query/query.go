@@ -61,11 +61,19 @@ func allNamespacesFrom(listener *sql.ListenerImpl) (allNamespaces bool) {
 func (q *Query) find(listener *sql.ListenerImpl) runtime.Object {
 	allNamespaces := allNamespacesFrom(listener)
 
+	var labelSelector string
+	if val, ok := listener.ComparisonPredicates["labels"].(string); ok && val != "" {
+		labelSelector = val
+	} else if val, ok := listener.ComparisonPredicates[".metadata.labels"].(string); ok && val != "" {
+		labelSelector = val
+	}
+
 	builder := q.builder.
 		Unstructured().
 		NamespaceParam(namespaceFrom(listener, q.defaultNamespace)).
 		AllNamespaces(allNamespaces).
 		DefaultNamespace().
+		LabelSelector(labelSelector).
 		ResourceTypeOrNameArgs(true, resourceFrom(listener)).
 		ContinueOnError().
 		Latest()
@@ -89,6 +97,11 @@ func filter(listener *sql.ListenerImpl, object runtime.Object) (results metav1.L
 	// shouldn't be used when filtering results.
 	delete(listener.ComparisonPredicates, "namespace")
 	delete(listener.ComparisonPredicates, ".metadata.namespace")
+
+	// The label (selector) is used when querying resources. so it
+	// shouldn't be used when filtering results.
+	delete(listener.ComparisonPredicates, "labels")
+	delete(listener.ComparisonPredicates, ".metadata.labels")
 
 	filterOne := createFilter(listener, &results)
 
