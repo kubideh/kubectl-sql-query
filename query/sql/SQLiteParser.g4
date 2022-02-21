@@ -37,95 +37,7 @@ options {
 parse: sql_stmt EOF
 ;
 
-sql_stmt: (EXPLAIN_ (QUERY_ PLAN_)?)? (
-        alter_table_stmt
-        | analyze_stmt
-        | attach_stmt
-        | begin_stmt
-        | commit_stmt
-        | create_index_stmt
-        | create_table_stmt
-        | create_trigger_stmt
-        | create_view_stmt
-        | create_virtual_table_stmt
-        | delete_stmt
-        | delete_stmt_limited
-        | detach_stmt
-        | drop_stmt
-        | insert_stmt
-        | pragma_stmt
-        | reindex_stmt
-        | release_stmt
-        | rollback_stmt
-        | savepoint_stmt
-        | select_stmt
-        | update_stmt
-        | update_stmt_limited
-        | vacuum_stmt
-    )
-;
-
-alter_table_stmt:
-    ALTER_ TABLE_ (schema_name DOT)? table_name (
-        RENAME_ (
-            TO_ new_table_name
-            | COLUMN_? old_column_name = column_name TO_ new_column_name = column_name
-        )
-        | ADD_ COLUMN_? column_def
-        | DROP_ COLUMN_? column_name
-    )
-;
-
-analyze_stmt:
-    ANALYZE_ (schema_name | (schema_name DOT)? table_or_index_name)?
-;
-
-attach_stmt:
-    ATTACH_ DATABASE_? expr AS_ schema_name
-;
-
-begin_stmt:
-    BEGIN_ (DEFERRED_ | IMMEDIATE_ | EXCLUSIVE_)? (
-        TRANSACTION_ transaction_name?
-    )?
-;
-
-commit_stmt: (COMMIT_ | END_) TRANSACTION_?
-;
-
-rollback_stmt:
-    ROLLBACK_ TRANSACTION_? (TO_ SAVEPOINT_? savepoint_name)?
-;
-
-savepoint_stmt:
-    SAVEPOINT_ savepoint_name
-;
-
-release_stmt:
-    RELEASE_ SAVEPOINT_? savepoint_name
-;
-
-create_index_stmt:
-    CREATE_ UNIQUE_? INDEX_ (IF_ NOT_ EXISTS_)? (schema_name DOT)? index_name ON_ table_name OPEN_PAR
-        indexed_column (COMMA indexed_column)* CLOSE_PAR (WHERE_ expr)?
-;
-
-indexed_column: (column_name | expr) (COLLATE_ collation_name)? asc_desc?
-;
-
-create_table_stmt:
-    CREATE_ (TEMP_ | TEMPORARY_)? TABLE_ (IF_ NOT_ EXISTS_)? (
-        schema_name DOT
-    )? table_name (
-        OPEN_PAR column_def (COMMA column_def)*? (COMMA table_constraint)* CLOSE_PAR (
-            WITHOUT_ row_ROW_ID = IDENTIFIER
-        )?
-        | AS_ select_stmt
-    )
-;
-
-column_def:
-    column_name type_name? column_constraint*
+sql_stmt: select_stmt
 ;
 
 type_name:
@@ -135,116 +47,11 @@ type_name:
     )?
 ;
 
-column_constraint: (CONSTRAINT_ name)? (
-        (PRIMARY_ KEY_ asc_desc? conflict_clause? AUTOINCREMENT_?)
-        | (NOT_ NULL_ | UNIQUE_) conflict_clause?
-        | CHECK_ OPEN_PAR expr CLOSE_PAR
-        | DEFAULT_ (signed_number | literal_value | OPEN_PAR expr CLOSE_PAR)
-        | COLLATE_ collation_name
-        | foreign_key_clause
-        | (GENERATED_ ALWAYS_)? AS_ OPEN_PAR expr CLOSE_PAR (
-            STORED_
-            | VIRTUAL_
-        )?
-    )
-;
-
 signed_number: (PLUS | MINUS)? NUMERIC_LITERAL
-;
-
-table_constraint: (CONSTRAINT_ name)? (
-        (PRIMARY_ KEY_ | UNIQUE_) OPEN_PAR indexed_column (
-            COMMA indexed_column
-        )* CLOSE_PAR conflict_clause?
-        | CHECK_ OPEN_PAR expr CLOSE_PAR
-        | FOREIGN_ KEY_ OPEN_PAR column_name (COMMA column_name)* CLOSE_PAR foreign_key_clause
-    )
-;
-
-foreign_key_clause:
-    REFERENCES_ foreign_table (
-        OPEN_PAR column_name (COMMA column_name)* CLOSE_PAR
-    )? (
-        ON_ (DELETE_ | UPDATE_) (
-            SET_ (NULL_ | DEFAULT_)
-            | CASCADE_
-            | RESTRICT_
-            | NO_ ACTION_
-        )
-        | MATCH_ name
-    )* (NOT_? DEFERRABLE_ (INITIALLY_ (DEFERRED_ | IMMEDIATE_))?)?
-;
-
-conflict_clause:
-    ON_ CONFLICT_ (
-        ROLLBACK_
-        | ABORT_
-        | FAIL_
-        | IGNORE_
-        | REPLACE_
-    )
-;
-
-create_trigger_stmt:
-    CREATE_ (TEMP_ | TEMPORARY_)? TRIGGER_ (IF_ NOT_ EXISTS_)? (
-        schema_name DOT
-    )? trigger_name (BEFORE_ | AFTER_ | INSTEAD_ OF_)? (
-        DELETE_
-        | INSERT_
-        | UPDATE_ (OF_ column_name ( COMMA column_name)*)?
-    ) ON_ table_name (FOR_ EACH_ ROW_)? (WHEN_ expr)? BEGIN_ (
-        (update_stmt | insert_stmt | delete_stmt | select_stmt) SCOL
-    )+ END_
-;
-
-create_view_stmt:
-    CREATE_ (TEMP_ | TEMPORARY_)? VIEW_ (IF_ NOT_ EXISTS_)? (
-        schema_name DOT
-    )? view_name (OPEN_PAR column_name (COMMA column_name)* CLOSE_PAR)? AS_ select_stmt
-;
-
-create_virtual_table_stmt:
-    CREATE_ VIRTUAL_ TABLE_ (IF_ NOT_ EXISTS_)? (schema_name DOT)? table_name USING_ module_name (
-        OPEN_PAR module_argument (COMMA module_argument)* CLOSE_PAR
-    )?
-;
-
-with_clause:
-    WITH_ RECURSIVE_? cte_table_name AS_ OPEN_PAR select_stmt CLOSE_PAR (
-        COMMA cte_table_name AS_ OPEN_PAR select_stmt CLOSE_PAR
-    )*
-;
-
-cte_table_name:
-    table_name (OPEN_PAR column_name ( COMMA column_name)* CLOSE_PAR)?
-;
-
-recursive_cte:
-    cte_table_name AS_ OPEN_PAR initial_select UNION_ ALL_? recursive__select CLOSE_PAR
 ;
 
 common_table_expression:
     table_name (OPEN_PAR column_name ( COMMA column_name)* CLOSE_PAR)? AS_ OPEN_PAR select_stmt CLOSE_PAR
-;
-
-delete_stmt:
-    with_clause? DELETE_ FROM_ qualified_table_name (WHERE_ expr)?
-;
-
-delete_stmt_limited:
-    with_clause? DELETE_ FROM_ qualified_table_name (WHERE_ expr)? (
-        order_by_stmt? limit_stmt
-    )?
-;
-
-detach_stmt:
-    DETACH_ DATABASE_? schema_name
-;
-
-drop_stmt:
-    DROP_ object = (INDEX_ | TABLE_ | TRIGGER_ | VIEW_) (
-        IF_ EXISTS_
-    )? (schema_name DOT)? any_name
 ;
 
 /*
@@ -322,60 +129,6 @@ literal_value:
     | CURRENT_TIMESTAMP_
 ;
 
-insert_stmt:
-    with_clause? (
-        INSERT_
-        | REPLACE_
-        | INSERT_ OR_ (
-            REPLACE_
-            | ROLLBACK_
-            | ABORT_
-            | FAIL_
-            | IGNORE_
-        )
-    ) INTO_ (schema_name DOT)? table_name (AS_ table_alias)? (
-        OPEN_PAR column_name ( COMMA column_name)* CLOSE_PAR
-    )? (
-        (
-            VALUES_ OPEN_PAR expr (COMMA expr)* CLOSE_PAR (
-                COMMA OPEN_PAR expr ( COMMA expr)* CLOSE_PAR
-            )*
-            | select_stmt
-        ) upsert_clause?
-    )
-    | DEFAULT_ VALUES_
-;
-
-upsert_clause:
-    ON_ CONFLICT_ (
-        OPEN_PAR indexed_column (COMMA indexed_column)* CLOSE_PAR (WHERE_ expr)?
-    )? DO_ (
-        NOTHING_
-        | UPDATE_ SET_ (
-            (column_name | column_name_list) EQ expr (
-                COMMA (column_name | column_name_list) EQ expr
-            )* (WHERE_ expr)?
-        )
-    )
-;
-
-pragma_stmt:
-    PRAGMA_ (schema_name DOT)? pragma_name (
-        ASSIGN pragma_value
-        | OPEN_PAR pragma_value CLOSE_PAR
-    )?
-;
-
-pragma_value:
-    signed_number
-    | name
-    | STRING_LITERAL
-;
-
-reindex_stmt:
-    REINDEX_ (collation_name | (schema_name DOT)? (table_name | index_name))?
-;
-
 select_stmt:
     common_table_stmt? select_core (compound_operator select_core)* order_by_stmt? limit_stmt?
 ;
@@ -448,34 +201,14 @@ compound_operator:
     | EXCEPT_
 ;
 
-update_stmt:
-    with_clause? UPDATE_ (
-        OR_ (ROLLBACK_ | ABORT_ | REPLACE_ | FAIL_ | IGNORE_)
-    )? qualified_table_name SET_ (column_name | column_name_list) ASSIGN expr (
-        COMMA (column_name | column_name_list) ASSIGN expr
-    )* (WHERE_ expr)?
-;
-
 column_name_list:
     OPEN_PAR column_name (COMMA column_name)* CLOSE_PAR
-;
-
-update_stmt_limited:
-    with_clause? UPDATE_ (
-        OR_ (ROLLBACK_ | ABORT_ | REPLACE_ | FAIL_ | IGNORE_)
-    )? qualified_table_name SET_ (column_name | column_name_list) ASSIGN expr (
-        COMMA (column_name | column_name_list) ASSIGN expr
-    )* (WHERE_ expr)? (order_by_stmt? limit_stmt)?
 ;
 
 qualified_table_name: (schema_name DOT)? table_name (AS_ alias)? (
         INDEXED_ BY_ index_name
         | NOT_ INDEXED_
     )?
-;
-
-vacuum_stmt:
-    VACUUM_ schema_name? (INTO_ filename)?
 ;
 
 filter_clause:
@@ -627,11 +360,6 @@ error_message:
     STRING_LITERAL
 ;
 
-module_argument: // TODO check what exactly is permitted here
-    expr
-    | column_def
-;
-
 column_alias:
     IDENTIFIER
     | STRING_LITERAL
@@ -639,69 +367,38 @@ column_alias:
 
 keyword:
     ABORT_
-    | ACTION_
-    | ADD_
-    | AFTER_
     | ALL_
-    | ALTER_
-    | ANALYZE_
     | AND_
     | AS_
     | ASC_
-    | ATTACH_
-    | AUTOINCREMENT_
-    | BEFORE_
-    | BEGIN_
     | BETWEEN_
     | BY_
-    | CASCADE_
     | CASE_
     | CAST_
-    | CHECK_
     | COLLATE_
     | COLUMN_
-    | COMMIT_
-    | CONFLICT_
-    | CONSTRAINT_
-    | CREATE_
     | CROSS_
     | CURRENT_DATE_
     | CURRENT_TIME_
     | CURRENT_TIMESTAMP_
-    | DATABASE_
     | DEFAULT_
-    | DEFERRABLE_
-    | DEFERRED_
-    | DELETE_
     | DESC_
-    | DETACH_
     | DISTINCT_
-    | DROP_
-    | EACH_
     | ELSE_
     | END_
     | ESCAPE_
     | EXCEPT_
-    | EXCLUSIVE_
     | EXISTS_
-    | EXPLAIN_
     | FAIL_
-    | FOR_
-    | FOREIGN_
     | FROM_
-    | FULL_
     | GLOB_
     | GROUP_
     | HAVING_
     | IF_
     | IGNORE_
-    | IMMEDIATE_
     | IN_
-    | INDEX_
     | INDEXED_
-    | INITIALLY_
     | INNER_
-    | INSERT_
     | INSTEAD_
     | INTERSECT_
     | INTO_
@@ -724,45 +421,26 @@ keyword:
     | OR_
     | ORDER_
     | OUTER_
-    | PLAN_
-    | PRAGMA_
-    | PRIMARY_
-    | QUERY_
     | RAISE_
     | RECURSIVE_
-    | REFERENCES_
     | REGEXP_
-    | REINDEX_
-    | RELEASE_
-    | RENAME_
-    | REPLACE_
-    | RESTRICT_
     | RIGHT_
     | ROLLBACK_
     | ROW_
     | ROWS_
-    | SAVEPOINT_
     | SELECT_
-    | SET_
     | TABLE_
     | TEMP_
     | TEMPORARY_
     | THEN_
     | TO_
-    | TRANSACTION_
-    | TRIGGER_
     | UNION_
-    | UNIQUE_
     | UPDATE_
     | USING_
-    | VACUUM_
     | VALUES_
-    | VIEW_
-    | VIRTUAL_
     | WHEN_
     | WHERE_
     | WITH_
-    | WITHOUT_
     | FIRST_VALUE_
     | OVER_
     | PARTITION_
@@ -781,9 +459,6 @@ keyword:
     | PERCENT_RANK_
     | RANK_
     | ROW_NUMBER_
-    | GENERATED_
-    | ALWAYS_
-    | STORED_
     | TRUE_
     | FALSE_
     | WINDOW_
@@ -813,14 +488,6 @@ table_name:
     any_name
 ;
 
-table_or_index_name:
-    any_name
-;
-
-new_table_name:
-    any_name
-;
-
 column_name:
     any_name
 ;
@@ -829,23 +496,7 @@ collation_name:
     any_name
 ;
 
-foreign_table:
-    any_name
-;
-
 index_name:
-    any_name
-;
-
-trigger_name:
-    any_name
-;
-
-view_name:
-    any_name
-;
-
-module_name:
     any_name
 ;
 
@@ -858,10 +509,6 @@ savepoint_name:
 ;
 
 table_alias:
-    any_name
-;
-
-transaction_name:
     any_name
 ;
 
