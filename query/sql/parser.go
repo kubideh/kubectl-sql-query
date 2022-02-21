@@ -2,7 +2,7 @@ package sql
 
 // The grammar for SQLite is used mostly without any additions. A
 // number of unused productions will be removed, however.
-//go:generate antlr -Dlanguage=Go -Werror -Xexact-output-dir -o parser SQLiteLexer.g4 SQLiteParser.g4
+//go:generate antlr -Dlanguage=Go -Werror -Xexact-output-dir -long-messages -o parser SQLiteLexer.g4 SQLiteParser.g4
 
 import (
 	"fmt"
