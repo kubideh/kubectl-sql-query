@@ -40,7 +40,17 @@ var directions = map[string]Direction{
 	"DESC": DESC,
 }
 
-func directionFrom(token string) Direction {
+func directionFrom(ctx *parser.Ordering_termContext) (result Direction) {
+	result = ASC
+
+	if ctx.Asc_desc() != nil {
+		result = directionFromText(ctx.Asc_desc().GetText())
+	}
+
+	return result
+}
+
+func directionFromText(token string) Direction {
 	return directions[strings.ToUpper(token)]
 }
 
@@ -152,7 +162,7 @@ func (l *ListenerImpl) ExitLiteral_value(ctx *parser.Literal_valueContext) {
 func (l *ListenerImpl) ExitOrdering_term(ctx *parser.Ordering_termContext) {
 	l.OrderBy = append(l.OrderBy, OrderBy{
 		Column:    ctx.Expr().GetText(),
-		Direction: directionFrom(ctx.Asc_desc().GetText()),
+		Direction: directionFrom(ctx),
 	})
 }
 

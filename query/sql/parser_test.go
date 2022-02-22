@@ -151,7 +151,7 @@ func TestParser(t *testing.T) {
 		},
 		{
 			name:  "ORDER BY clause",
-			query: "SELECT .spec.terminationGracePeriodSeconds, name FROM pods ORDER BY .spec.terminationGracePeriodSeconds Asc, name Desc",
+			query: "SELECT .spec.terminationGracePeriodSeconds, name FROM pods ORDER BY .spec.terminationGracePeriodSeconds Asc, name Desc, labels",
 			expectedListener: ListenerImpl{
 				TableName: "pods",
 				Columns: []string{
@@ -161,6 +161,7 @@ func TestParser(t *testing.T) {
 				OrderBy: []OrderBy{
 					{Column: ".spec.terminationGracePeriodSeconds", Direction: ASC},
 					{Column: "name", Direction: DESC},
+					{Column: "labels", Direction: ASC},
 				},
 			},
 		},
