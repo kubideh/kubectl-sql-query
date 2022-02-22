@@ -3,6 +3,7 @@ module github.com/kubideh/kubectl-sql-query
 go 1.17
 
 require (
+	github.com/AlekSi/pointer v1.2.0
 	github.com/antlr/antlr4/runtime/Go/antlr v0.0.0-20220209173558-ad29539cd2e9
 	github.com/stretchr/testify v1.7.0
 	k8s.io/api v0.23.4

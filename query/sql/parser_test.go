@@ -150,15 +150,17 @@ func TestParser(t *testing.T) {
 			},
 		},
 		{
-			name:  "SELECT clause can declare column aliases",
-			query: "SELECT name AS pod_name FROM pods",
+			name:  "ORDER BY clause",
+			query: "SELECT .spec.terminationGracePeriodSeconds, name FROM pods ORDER BY .spec.terminationGracePeriodSeconds Asc, name Desc",
 			expectedListener: ListenerImpl{
 				TableName: "pods",
 				Columns: []string{
+					".spec.terminationGracePeriodSeconds",
 					"name",
 				},
-				ColumnAliases: map[string]string{
-					"name": "pod_name",
+				OrderBy: []OrderBy{
+					{Column: ".spec.terminationGracePeriodSeconds", Direction: ASC},
+					{Column: "name", Direction: DESC},
 				},
 			},
 		},

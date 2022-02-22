@@ -3,6 +3,7 @@ package query
 import (
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 	"unicode"
 
@@ -27,6 +28,51 @@ type Query struct {
 	defaultNamespace string
 }
 
+type Sorter struct {
+	sorters    []*get.TableSorter
+	directions []sql.Direction
+}
+
+func (s *Sorter) Len() int {
+	return s.sorters[0].Len()
+}
+
+func (s *Sorter) Less(i, j int) bool {
+	if len(s.sorters) > 1 {
+		var k int
+		for k = 0; k < len(s.sorters); k++ {
+			sorter := s.sorters[k]
+			dir := s.directions[k]
+			switch {
+			case sorter.Less(i, j):
+				if dir == sql.DESC {
+					return false
+				}
+				return true
+			case sorter.Less(j, i):
+				if dir == sql.DESC {
+					return true
+				}
+				return false
+			}
+		}
+
+		if s.directions[k] == sql.DESC {
+			return !s.sorters[k].Less(i, j)
+		}
+		return s.sorters[k].Less(i, j)
+	}
+
+	if s.directions[0] == sql.DESC {
+		return !s.sorters[0].Less(i, j)
+	}
+	return s.sorters[0].Less(i, j)
+}
+
+func (s *Sorter) Swap(i, j int) {
+	s.sorters[0].Swap(i, j)
+}
+
 // Run the given SQL-query and print the results to the provided I/O streams.
 func (q *Query) Run(sqlQuery string) int {
 	var errorListener sql.ErrorListenerImpl
@@ -40,6 +86,56 @@ func (q *Query) Run(sqlQuery string) int {
 	}
 
 	results := q.find(&listener)
+
+	objects, err := meta.ExtractList(results)
+
+	if err != nil {
+		panic(err)
+	}
+
+	if len(objects) > 0 && len(listener.OrderBy) > 0 {
+		var rows []metav1.TableRow
+		for _, o := range objects {
+			row := metav1.TableRow{
+				Object: runtime.RawExtension{Object: o},
+			}
+			rows = append(rows, row)
+		}
+
+		table := metav1.Table{
+			Rows: rows,
+		}
+
+		var sorter Sorter
+
+		for _, ob := range listener.OrderBy {
+			path, err := get.RelaxedJSONPathExpression(fieldFromAlias(ob.Column))
+
+			if err != nil {
+				panic(err)
+			}
+
+			s, err := get.NewTableSorter(&table, path)
+
+			if err != nil {
+				panic(err)
+			}
+
+			sorter.sorters = append(sorter.sorters, s)
+			sorter.directions = append(sorter.directions, ob.Direction)
+		}
+
+		sort.Sort(&sorter)
+
+		var items []runtime.RawExtension
+		for _, o := range table.Rows {
+			items = append(items, o.Object)
+		}
+
+		results = &metav1.List{
+			Items: items,
+		}
+	}
 
 	q.print(listener.Columns, listener.ColumnAliases, results)
 	return 0
@@ -107,7 +203,7 @@ func filter(listener *sql.ListenerImpl, object runtime.Object) (results metav1.L
 
 	if meta.IsListType(object) {
 		if err := meta.EachListItem(object, filterOne); err != nil {
-			panic(err.Error())
+			panic(err)
 		}
 	} else {
 		filterOne(object)
@@ -127,18 +223,18 @@ func createFilter(listener *sql.ListenerImpl, results *metav1.List) func(object 
 			path, err := get.RelaxedJSONPathExpression(fieldFromAlias(key))
 
 			if err != nil {
-				panic(err.Error())
+				panic(err)
 			}
 
 			jsonPath := jsonpath.New("object")
 			jsonPath = jsonPath.AllowMissingKeys(true)
 			if err := jsonPath.Parse(path); err != nil {
-				panic(err.Error())
+				panic(err)
 			}
 			values, err := jsonPath.FindResults(object)
 
 			if err != nil {
-				panic(err.Error())
+				panic(err)
 			}
 
 			if len(values) == 0 || len(values[0]) == 0 {
@@ -243,7 +339,7 @@ func createCustomColumnsPrinter(columns []string, columnAliases map[string]strin
 	printer, err := get.NewCustomColumnsPrinterFromSpec(spec, decoder, false)
 
 	if err != nil {
-		panic(err.Error())
+		panic(err)
 	}
 
 	return printer
@@ -263,7 +359,7 @@ func (q *Query) print(columns []string, columnAliases map[string]string, results
 	printer := createPrinter(columns, columnAliases)
 
 	if err := printer.PrintObj(results, q.streams.Out); err != nil {
-		panic(err.Error())
+		panic(err)
 	}
 }
 

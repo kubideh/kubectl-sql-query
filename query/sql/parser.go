@@ -28,6 +28,27 @@ func (el *ErrorListenerImpl) SyntaxError(recognizer antlr.Recognizer, offendingS
 
 var _ antlr.ErrorListener = &ErrorListenerImpl{}
 
+type Direction int
+
+const (
+	ASC Direction = iota + 1
+	DESC
+)
+
+var directions = map[string]Direction{
+	"ASC":  ASC,
+	"DESC": DESC,
+}
+
+func directionFrom(token string) Direction {
+	return directions[strings.ToUpper(token)]
+}
+
+type OrderBy struct {
+	Column    string
+	Direction Direction
+}
+
 // ListenerImpl is a parser.SQLiteParserListener, and holds all the
 // tokens parsed from the SQL query, which are needed to construct
 // a query against the Kubernetes API.
@@ -38,6 +59,7 @@ type ListenerImpl struct {
 	Columns              []string
 	ComparisonPredicates map[string]interface{}
 	ColumnAliases        map[string]string
+	OrderBy              []OrderBy
 }
 
 // ExitColumn_alias is called when production column_alias is exited.
@@ -97,16 +119,17 @@ func (l *ListenerImpl) ExitExpr(ctx *parser.ExprContext) {
 		lhs, l.stack = take(l.stack)
 
 		field := lhs.(string)
+
+		if l.ComparisonPredicates == nil {
+			l.ComparisonPredicates = make(map[string]interface{})
+		}
+
 		l.ComparisonPredicates[field] = rhs
 	}
 }
 
 // ExitLiteral_value is called when production literal_value is exited.
 func (l *ListenerImpl) ExitLiteral_value(ctx *parser.Literal_valueContext) {
-	if l.ComparisonPredicates == nil {
-		l.ComparisonPredicates = make(map[string]interface{})
-	}
-
 	if ctx.STRING_LITERAL() != nil {
 		value := ctx.STRING_LITERAL().GetText()
 		value = strings.TrimPrefix(value, "'")
@@ -115,7 +138,7 @@ func (l *ListenerImpl) ExitLiteral_value(ctx *parser.Literal_valueContext) {
 	} else if ctx.NUMERIC_LITERAL() != nil {
 		value, err := strconv.ParseInt(ctx.NUMERIC_LITERAL().GetText(), 10, 64)
 		if err != nil {
-			panic(err.Error())
+			panic(err)
 		}
 		l.stack = push(l.stack, value)
 	} else if ctx.TRUE_() != nil {
@@ -123,6 +146,14 @@ func (l *ListenerImpl) ExitLiteral_value(ctx *parser.Literal_valueContext) {
 	} else if ctx.FALSE_() != nil {
 		l.stack = push(l.stack, false)
 	}
+}
+
+// ExitOrdering_term is called when production ordering_term is exited.
+func (l *ListenerImpl) ExitOrdering_term(ctx *parser.Ordering_termContext) {
+	l.OrderBy = append(l.OrderBy, OrderBy{
+		Column:    ctx.Expr().GetText(),
+		Direction: directionFrom(ctx.Asc_desc().GetText()),
+	})
 }
 
 func push(stack []interface{}, value interface{}) []interface{} {

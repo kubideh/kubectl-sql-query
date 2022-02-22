@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/AlekSi/pointer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
@@ -239,6 +240,95 @@ func TestQueryForPodsUsingLabels(t *testing.T) {
 
 	assert.NotContains(t, out, "foo", "Unexpected output")
 	assert.Contains(t, out, "bar", "Unexpected output")
+}
+
+func TestQueryForOrderedPods(t *testing.T) {
+	const namespaceName = "fake-namespace-blargle-2"
+
+	verifyClusterIsUp(t)
+
+	clientSet := createClientSet(t)
+
+	setupNamespace(t, clientSet, namespaceName)
+
+	_, err := clientSet.CoreV1().Pods(namespaceName).Create(
+		context.Background(),
+		&v1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "apple",
+				Namespace: namespaceName,
+			},
+			Spec: v1.PodSpec{
+				Containers: []v1.Container{
+					{
+						Name:  "container",
+						Image: "busybox",
+					},
+				},
+				TerminationGracePeriodSeconds: pointer.ToInt64(1),
+			},
+		},
+		metav1.CreateOptions{},
+	)
+	if !apierrors.IsAlreadyExists(err) {
+		require.NoErrorf(t, err, "Failed to create the pod %s in namespace %s", "foo", namespaceName)
+	}
+
+	_, err = clientSet.CoreV1().Pods(namespaceName).Create(
+		context.Background(),
+		&v1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "banana",
+				Namespace: namespaceName,
+			},
+			Spec: v1.PodSpec{
+				Containers: []v1.Container{
+					{
+						Name:  "container",
+						Image: "busybox",
+					},
+				},
+				TerminationGracePeriodSeconds: pointer.ToInt64(2),
+			},
+		},
+		metav1.CreateOptions{},
+	)
+	if !apierrors.IsAlreadyExists(err) {
+		require.NoErrorf(t, err, "Failed to create the pod %s in namespace %s", "foo", namespaceName)
+	}
+
+	_, err = clientSet.CoreV1().Pods(namespaceName).Create(
+		context.Background(),
+		&v1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "corn",
+				Namespace: namespaceName,
+			},
+			Spec: v1.PodSpec{
+				Containers: []v1.Container{
+					{
+						Name:  "container",
+						Image: "busybox",
+					},
+				},
+				TerminationGracePeriodSeconds: pointer.ToInt64(2),
+			},
+		},
+		metav1.CreateOptions{},
+	)
+	if !apierrors.IsAlreadyExists(err) {
+		require.NoErrorf(t, err, "Failed to create the pod %s in namespace %s", "foo", namespaceName)
+	}
+
+	setNamespaceInContext(t, namespaceName)
+
+	out := executeQuery(t, "SELECT .spec.terminationGracePeriodSeconds, name FROM pods ORDER BY .spec.terminationGracePeriodSeconds ASC, name DESC")
+
+	assert.Equal(t, `.SPEC.TERMINATION_GRACE_PERIOD_SECONDS   .METADATA.NAME
+1                                        apple
+2                                        corn
+2                                        banana
+`, out)
 }
 
 func verifyClusterIsUp(t *testing.T) {

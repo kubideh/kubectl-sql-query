@@ -62,7 +62,7 @@ func defaultNamespace(kubeConfig clientcmd.ClientConfig) (result string) {
 	result, _, err := kubeConfig.Namespace()
 
 	if err != nil {
-		panic(err.Error())
+		panic(err)
 	}
 
 	return

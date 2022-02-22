@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/AlekSi/pointer"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
@@ -523,6 +524,208 @@ nginx-default   <unknown>
 			},
 			expectedOutput: `.METADATA.NAME   .METADATA.LABELS
 nginx-foo        map[app:foo gateway:nginx]
+`,
+		},
+		{
+			name:         "Query for pods ordered by name in ascending order",
+			groupVersion: v1.SchemeGroupVersion,
+			returnedObject: &v1.PodList{
+				Items: []v1.Pod{
+					{
+						TypeMeta: metav1.TypeMeta{
+							APIVersion: "v1",
+							Kind:       "Pod",
+						},
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "corn",
+							Namespace: "default",
+						},
+					},
+					{
+						TypeMeta: metav1.TypeMeta{
+							APIVersion: "v1",
+							Kind:       "Pod",
+						},
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "apple",
+							Namespace: "default",
+						},
+					},
+					{
+						TypeMeta: metav1.TypeMeta{
+							APIVersion: "v1",
+							Kind:       "Pod",
+						},
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "banana",
+							Namespace: "default",
+						},
+					},
+				},
+			},
+			defaultNamespace: "default",
+			sqlQuery:         "SELECT * FROM pods ORDER BY name ASC",
+			expectedPath:     "/namespaces/default/pods",
+			expectedOutput: `NAME     AGE
+apple    <unknown>
+banana   <unknown>
+corn     <unknown>
+`,
+		},
+		{
+			name:         "Query for pods ordered by name in descending order",
+			groupVersion: v1.SchemeGroupVersion,
+			returnedObject: &v1.PodList{
+				Items: []v1.Pod{
+					{
+						TypeMeta: metav1.TypeMeta{
+							APIVersion: "v1",
+							Kind:       "Pod",
+						},
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "corn",
+							Namespace: "default",
+						},
+					},
+					{
+						TypeMeta: metav1.TypeMeta{
+							APIVersion: "v1",
+							Kind:       "Pod",
+						},
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "apple",
+							Namespace: "default",
+						},
+					},
+					{
+						TypeMeta: metav1.TypeMeta{
+							APIVersion: "v1",
+							Kind:       "Pod",
+						},
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "banana",
+							Namespace: "default",
+						},
+					},
+				},
+			},
+			defaultNamespace: "default",
+			sqlQuery:         "SELECT * FROM pods ORDER BY name Desc",
+			expectedPath:     "/namespaces/default/pods",
+			expectedOutput: `NAME     AGE
+corn     <unknown>
+banana   <unknown>
+apple    <unknown>
+`,
+		},
+		{
+			name:         "Ordered query using multiple columns",
+			groupVersion: v1.SchemeGroupVersion,
+			returnedObject: &v1.PodList{
+				Items: []v1.Pod{
+					{
+						TypeMeta: metav1.TypeMeta{
+							APIVersion: "v1",
+							Kind:       "Pod",
+						},
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "apple",
+							Namespace: "default",
+						},
+						Spec: v1.PodSpec{
+							TerminationGracePeriodSeconds: pointer.ToInt64(1),
+						},
+					},
+					{
+						TypeMeta: metav1.TypeMeta{
+							APIVersion: "v1",
+							Kind:       "Pod",
+						},
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "banana",
+							Namespace: "default",
+						},
+						Spec: v1.PodSpec{
+							TerminationGracePeriodSeconds: pointer.ToInt64(2),
+						},
+					},
+					{
+						TypeMeta: metav1.TypeMeta{
+							APIVersion: "v1",
+							Kind:       "Pod",
+						},
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "corn",
+							Namespace: "default",
+						},
+						Spec: v1.PodSpec{
+							TerminationGracePeriodSeconds: pointer.ToInt64(2),
+						},
+					},
+				},
+			},
+			defaultNamespace: "default",
+			sqlQuery:         "SELECT .spec.terminationGracePeriodSeconds, name FROM pods ORDER BY .spec.terminationGracePeriodSeconds ASC, name ASC",
+			expectedPath:     "/namespaces/default/pods",
+			expectedOutput: `.SPEC.TERMINATION_GRACE_PERIOD_SECONDS   .METADATA.NAME
+1                                        apple
+2                                        banana
+2                                        corn
+`,
+		},
+		{
+			name:         "Ordered query using multiple columns and directions",
+			groupVersion: v1.SchemeGroupVersion,
+			returnedObject: &v1.PodList{
+				Items: []v1.Pod{
+					{
+						TypeMeta: metav1.TypeMeta{
+							APIVersion: "v1",
+							Kind:       "Pod",
+						},
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "apple",
+							Namespace: "default",
+						},
+						Spec: v1.PodSpec{
+							TerminationGracePeriodSeconds: pointer.ToInt64(1),
+						},
+					},
+					{
+						TypeMeta: metav1.TypeMeta{
+							APIVersion: "v1",
+							Kind:       "Pod",
+						},
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "banana",
+							Namespace: "default",
+						},
+						Spec: v1.PodSpec{
+							TerminationGracePeriodSeconds: pointer.ToInt64(2),
+						},
+					},
+					{
+						TypeMeta: metav1.TypeMeta{
+							APIVersion: "v1",
+							Kind:       "Pod",
+						},
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "corn",
+							Namespace: "default",
+						},
+						Spec: v1.PodSpec{
+							TerminationGracePeriodSeconds: pointer.ToInt64(2),
+						},
+					},
+				},
+			},
+			defaultNamespace: "default",
+			sqlQuery:         "SELECT .spec.terminationGracePeriodSeconds, name FROM pods ORDER BY .spec.terminationGracePeriodSeconds ASC, name DESC",
+			expectedPath:     "/namespaces/default/pods",
+			expectedOutput: `.SPEC.TERMINATION_GRACE_PERIOD_SECONDS   .METADATA.NAME
+1                                        apple
+2                                        corn
+2                                        banana
 `,
 		},
 	}
