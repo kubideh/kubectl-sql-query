@@ -28,51 +28,6 @@ type Query struct {
 	defaultNamespace string
 }
 
-type Sorter struct {
-	sorters    []*get.TableSorter
-	directions []sql.Direction
-}
-
-func (s *Sorter) Len() int {
-	return s.sorters[0].Len()
-}
-
-func (s *Sorter) Less(i, j int) bool {
-	if len(s.sorters) > 1 {
-		var k int
-		for k = 0; k < len(s.sorters); k++ {
-			sorter := s.sorters[k]
-			dir := s.directions[k]
-			switch {
-			case sorter.Less(i, j):
-				if dir == sql.DESC {
-					return false
-				}
-				return true
-			case sorter.Less(j, i):
-				if dir == sql.DESC {
-					return true
-				}
-				return false
-			}
-		}
-
-		if s.directions[k] == sql.DESC {
-			return !s.sorters[k].Less(i, j)
-		}
-		return s.sorters[k].Less(i, j)
-	}
-
-	if s.directions[0] == sql.DESC {
-		return !s.sorters[0].Less(i, j)
-	}
-	return s.sorters[0].Less(i, j)
-}
-
-func (s *Sorter) Swap(i, j int) {
-	s.sorters[0].Swap(i, j)
-}
-
 // Run the given SQL-query and print the results to the provided I/O streams.
 func (q *Query) Run(sqlQuery string) int {
 	var errorListener sql.ErrorListenerImpl
@@ -87,6 +42,13 @@ func (q *Query) Run(sqlQuery string) int {
 
 	results := q.find(&listener)
 
+	results = sortResults(&listener, results)
+
+	q.printResults(listener.Columns, listener.ColumnAliases, results)
+	return 0
+}
+
+func sortResults(listener *sql.ListenerImpl, results runtime.Object) runtime.Object {
 	objects, err := meta.ExtractList(results)
 
 	if err != nil {
@@ -132,13 +94,12 @@ func (q *Query) Run(sqlQuery string) int {
 			items = append(items, o.Object)
 		}
 
-		results = &metav1.List{
+		return &metav1.List{
 			Items: items,
 		}
 	}
 
-	q.print(listener.Columns, listener.ColumnAliases, results)
-	return 0
+	return results
 }
 
 func (q *Query) parseQuery(errorListener *sql.ErrorListenerImpl, listener *sql.ListenerImpl, sqlQuery string) {
@@ -355,7 +316,7 @@ func createPrinter(columns []string, columnAliases map[string]string) (printer p
 	return
 }
 
-func (q *Query) print(columns []string, columnAliases map[string]string, results runtime.Object) {
+func (q *Query) printResults(columns []string, columnAliases map[string]string, results runtime.Object) {
 	printer := createPrinter(columns, columnAliases)
 
 	if err := printer.PrintObj(results, q.streams.Out); err != nil {
