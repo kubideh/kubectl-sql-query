@@ -55,51 +55,60 @@ func sortResults(listener *sql.ListenerImpl, results runtime.Object) runtime.Obj
 		panic(err)
 	}
 
-	if len(objects) > 0 && len(listener.OrderBy) > 0 {
-		var rows []metav1.TableRow
-		for _, o := range objects {
-			row := metav1.TableRow{
-				Object: runtime.RawExtension{Object: o},
-			}
-			rows = append(rows, row)
-		}
-
-		table := metav1.Table{
-			Rows: rows,
-		}
-
-		var sorter Sorter
-
-		for _, ob := range listener.OrderBy {
-			path, err := get.RelaxedJSONPathExpression(fieldFromAlias(ob.Column))
-
-			if err != nil {
-				panic(err)
-			}
-
-			s, err := get.NewTableSorter(&table, path)
-
-			if err != nil {
-				panic(err)
-			}
-
-			sorter.sorters = append(sorter.sorters, s)
-			sorter.directions = append(sorter.directions, ob.Direction)
-		}
-
-		sort.Sort(&sorter)
-
-		var items []runtime.RawExtension
-		for _, o := range table.Rows {
-			items = append(items, o.Object)
-		}
-
-		return &metav1.List{
-			Items: items,
-		}
+	if len(objects) == 0 || len(listener.OrderBy) == 0 {
+		return results
 	}
 
-	return results
+	table := createTable(objects)
+	sortTable(listener, table)
+
+	result := createList(table)
+	return result
+}
+
+func createTable(objects []runtime.Object) (table *metav1.Table) {
+	table = &metav1.Table{
+		Rows: tableRowsFrom(objects),
+	}
+
+	return
+}
+
+func tableRowsFrom(objects []runtime.Object) (rows []metav1.TableRow) {
+	for _, o := range objects {
+		rows = append(rows, createTableRow(o))
+	}
+
+	return
+}
+
+func createTableRow(object runtime.Object) (row metav1.TableRow) {
+	row = metav1.TableRow{
+		Object: runtime.RawExtension{Object: object},
+	}
+
+	return
+}
+
+func sortTable(listener *sql.ListenerImpl, table *metav1.Table) {
+	sorter := createSorter(listener.OrderBy, table)
+	sort.Sort(sorter)
+}
+
+func createList(table *metav1.Table) (list *metav1.List) {
+	list = &metav1.List{
+		Items: itemsFrom(table),
+	}
+
+	return
+}
+
+func itemsFrom(table *metav1.Table) (items []runtime.RawExtension) {
+	for _, o := range table.Rows {
+		items = append(items, o.Object)
+	}
+
+	return
 }
 
 func (q *Query) parseQuery(errorListener *sql.ErrorListenerImpl, listener *sql.ListenerImpl, sqlQuery string) {
@@ -116,25 +125,7 @@ func allNamespacesFrom(listener *sql.ListenerImpl) (allNamespaces bool) {
 }
 
 func (q *Query) find(listener *sql.ListenerImpl) runtime.Object {
-	allNamespaces := allNamespacesFrom(listener)
-
-	var labelSelector string
-	if val, ok := listener.ComparisonPredicates["labels"].(string); ok && val != "" {
-		labelSelector = val
-	} else if val, ok := listener.ComparisonPredicates[".metadata.labels"].(string); ok && val != "" {
-		labelSelector = val
-	}
-
-	builder := q.builder.
-		Unstructured().
-		NamespaceParam(namespaceFrom(listener, q.defaultNamespace)).
-		AllNamespaces(allNamespaces).
-		DefaultNamespace().
-		LabelSelector(labelSelector).
-		ResourceTypeOrNameArgs(true, resourceFrom(listener)).
-		ContinueOnError().
-		Latest()
-
+	builder := q.Builder(listener)
 	result := builder.Do()
 
 	result.IgnoreErrors(apierrors.IsNotFound)
@@ -147,6 +138,34 @@ func (q *Query) find(listener *sql.ListenerImpl) runtime.Object {
 	results := filter(listener, object)
 
 	return &results
+}
+
+func (q *Query) Builder(listener *sql.ListenerImpl) (builder *resource.Builder) {
+	allNamespaces := allNamespacesFrom(listener)
+
+	labelSelector := labelSelectorFrom(listener)
+
+	builder = q.builder.
+		Unstructured().
+		NamespaceParam(namespaceFrom(listener, q.defaultNamespace)).
+		AllNamespaces(allNamespaces).
+		DefaultNamespace().
+		LabelSelector(labelSelector).
+		ResourceTypeOrNameArgs(true, resourceFrom(listener)).
+		ContinueOnError().
+		Latest()
+
+	return
+}
+
+func labelSelectorFrom(listener *sql.ListenerImpl) (labelSelector string) {
+	if val, ok := listener.ComparisonPredicates["labels"].(string); ok && val != "" {
+		labelSelector = val
+	} else if val, ok := listener.ComparisonPredicates[".metadata.labels"].(string); ok && val != "" {
+		labelSelector = val
+	}
+
+	return
 }
 
 func filter(listener *sql.ListenerImpl, object runtime.Object) (results metav1.List) {

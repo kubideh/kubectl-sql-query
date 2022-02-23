@@ -2,6 +2,7 @@ package query
 
 import (
 	"github.com/kubideh/kubectl-sql-query/query/sql"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/kubectl/pkg/cmd/get"
 )
 
@@ -48,4 +49,27 @@ func (s *Sorter) Less(i, j int) bool {
 
 func (s *Sorter) Swap(i, j int) {
 	s.sorters[0].Swap(i, j)
+}
+
+func createSorter(orderBy []sql.OrderBy, table *metav1.Table) *Sorter {
+	var sorter Sorter
+
+	for _, ob := range orderBy {
+		path, err := get.RelaxedJSONPathExpression(fieldFromAlias(ob.Column))
+
+		if err != nil {
+			panic(err)
+		}
+
+		s, err := get.NewTableSorter(table, path)
+
+		if err != nil {
+			panic(err)
+		}
+
+		sorter.sorters = append(sorter.sorters, s)
+		sorter.directions = append(sorter.directions, ob.Direction)
+	}
+
+	return &sorter
 }
