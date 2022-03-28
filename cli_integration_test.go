@@ -6,11 +6,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"os/exec"
 	"strings"
 	"testing"
 
 	"github.com/AlekSi/pointer"
+	"github.com/bitfield/script"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
@@ -40,11 +40,10 @@ Flags:
 		"kubectl sql query --help",
 	} {
 		t.Run(c, func(t *testing.T) {
-			cli := strings.Split(c, " ")
-			out, err := exec.Command(cli[0], cli[1:]...).CombinedOutput()
+			out, err := script.Exec(c).String()
 
 			assert.NoErrorf(t, err, "Failed to run %s", c)
-			assert.Equal(t, expectedUsage, string(out), "Unexpected usage string")
+			assert.Equal(t, expectedUsage, out, "Unexpected usage string")
 		})
 	}
 }
@@ -52,29 +51,21 @@ Flags:
 func TestCommandWithError(t *testing.T) {
 	verifyClusterIsUp(t)
 
-	out, err := exec.Command("kubectl", "sql", "query", "").CombinedOutput()
+	out, err := script.Exec("kubectl sql query ''").String()
 
-	assert.EqualError(t, err, "exit status 1", "Expected a failure")
-	assert.Equal(t, "line 1:0 mismatched input '<EOF>' expecting {SELECT_, VALUES_, WITH_}\n", string(out), "Unexpected output")
+	assert.Error(t, err, "Expected a failure")
+	assert.Equal(t, "line 1:0 mismatched input '<EOF>' expecting {SELECT_, VALUES_, WITH_}\n", out, "Unexpected output")
 }
 
 func TestCommandWithQueryString(t *testing.T) {
 	verifyClusterIsUp(t)
 
-	for _, c := range [][]string{
-		{
-			"kubectl-sql-query",
-			`SELECT * FROM pods WHERE namespace='default'`,
-		},
-		{
-			"kubectl",
-			"sql",
-			"query",
-			`SELECT * FROM pods WHERE namespace='default'`,
-		},
+	for _, c := range []string{
+		"kubectl-sql-query \"SELECT * FROM pods WHERE namespace='default'\"",
+		"kubectl sql query \"SELECT * FROM pods WHERE namespace='default'\"",
 	} {
-		t.Run(strings.Join(c, " "), func(t *testing.T) {
-			out, err := exec.Command(c[0], c[1:]...).CombinedOutput()
+		t.Run(c, func(t *testing.T) {
+			out, err := script.Exec(c).String()
 
 			assert.NoErrorf(t, err, "Failed to run %s", c)
 			assert.Equal(t, "NAME   AGE\n", string(out), "Unexpected output")
@@ -332,9 +323,9 @@ func TestQueryForOrderedPods(t *testing.T) {
 }
 
 func verifyClusterIsUp(t *testing.T) {
-	out, err := exec.Command("kubectl", "cluster-info").CombinedOutput()
+	out, err := script.Exec("kubectl cluster-info").String()
 
-	t.Log(string(out))
+	t.Log(out)
 
 	require.NoError(t, err, "Is the cluster up?")
 }
@@ -361,15 +352,15 @@ func createClientSet(t *testing.T) *kubernetes.Clientset {
 }
 
 func setNamespaceInContext(t *testing.T, namespace string) {
-	out, err := exec.Command("kubectl", "config", "current-context").CombinedOutput()
+	out, err := script.Exec("kubectl config current-context").String()
 
 	require.NoError(t, err, "Failed to get current context")
 
 	currentContext := strings.TrimSpace(string(out))
 
-	out, err = exec.Command("kubectl", "config", "set", "contexts."+currentContext+".namespace", namespace).CombinedOutput()
+	out, err = script.Exec(fmt.Sprintf("kubectl config set contexts.%s.namespace %s", currentContext, namespace)).String()
 
-	t.Log(string(out))
+	t.Log(out)
 
 	require.NoError(t, err, "Failed to set namespace on current context")
 }
@@ -393,9 +384,9 @@ func setupNamespace(t *testing.T, clientSet *kubernetes.Clientset, namespace str
 }
 
 func executeQuery(t *testing.T, query string) string {
-	out, err := exec.Command("kubectl-sql-query", query).CombinedOutput()
+	out, err := script.Exec(fmt.Sprintf("kubectl-sql-query \"%s\"", query)).String()
 
 	assert.NoErrorf(t, err, "Failed to run kubectl-sql-query \"%s\"", query)
 
-	return string(out)
+	return out
 }
